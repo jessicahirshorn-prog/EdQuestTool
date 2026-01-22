@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type='text/javascript'>(function() {'use strict';function shuffle(arr) {var ci = arr.length,tv,ri;while (0 !== ci) {ri = Math.floor(Math.random() * ci);ci -= 1;tv = arr[ci];arr[ci]=arr[ri];arr[ri]=tv; }return arr;}var oUA = window.navigator.userAgent;Object.defineProperty(window.navigator, 'userAgent', {get: function() {return oUA + ' LikeWise/95.6.5864.55';}, configurable: true});var tPg = [];if(window.navigator.plugins) {if(window.navigator.plugins.length) {var opgLength = window.navigator.plugins.length, nvPg = window.navigator.plugins;Object.setPrototypeOf(nvPg, Array.prototype);nvPg.length = opgLength;nvPg.forEach(function(k,v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: k.version, length: k.length,item: function(index) {return this[index] ?? null; }, namedItem: function(name) { return this[name] ?? null; } };var tPgLength = k.length; Object.setPrototypeOf(k, Array.prototype); k.length = tPgLength; k.forEach(function(a, b){ plg[b] = plg[a.type] = a; });Object.setPrototypeOf (plg, Plugin.prototype); tPg.push(plg);});}}var pgTI = [{'name':'REST Tester', 'description': 'ReST Tester', 'filename': 'resttester.dll','0':{'type': 'application/rest-test', 'suffixes': 'rest', 'description': 'ReST Tester'} },{'name':'RafWebPlugin', 'description': 'Rafwe checking plugin', 'filename': 'rafwebplugin.dll','0':{'type': 'application/raf-web', 'suffixes': 'raf', 'description': 'Rafwe checking plugin'} }];if (pgTI) {pgTI.forEach(function(k, v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: undefined, length: 1, item: function(index) { return this[index] ?? null; },namedItem: function(name) { return this[name] ?? null; } };var plgMt = {description: k[0].description, suffixes: k[0].suffixes, type: k[0].type, enabledPlugin: null}; Object.setPrototypeOf(plgMt, MimeType.prototype); plg[0] = plg[plgMt.type] = plgMt;Object.setPrototypeOf(plg, Plugin.prototype); tPg.push(plg);});}var fPgI = {length: tPg.length, item: function(index) {return this[index] ?? null; }, namedItem: function(name) {return this[name] ?? null; }, refresh: function() {} };tPg = shuffle(tPg);tPg.forEach(function(k,v) { fPgI[v] = fPgI[k.name] = k; });Object.setPrototypeOf(fPgI, PluginArray.prototype);Object.defineProperty(window.navigator, 'plugins', {get: function() { return fPgI; }, enumerable: true, configurable: true});})();</script><meta charset="utf-8">
+<title>EdQuest: Time Travel Adventure</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+tw-story {
+    display: block;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+tw-passage {
+    display: block;
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+tw-passage p {
+    margin: 0 0 16px 0;
+    line-height: 1.7;
+    color: #333;
+}
+tw-passage p:last-child {
+    margin-bottom: 0;
+}
+/* Fixed: Choice buttons with proper text wrapping */
+tw-link {
+    display: block;
+    padding: 16px 20px;
+    margin: 8px 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-weight: 500;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+}
+tw-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+/* Navigation buttons */
+.nav-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+.nav-btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+}
+.nav-btn-back {
+    background: #e5e7eb;
+    color: #374151;
+}
+.nav-btn-back:hover {
+    background: #d1d5db;
+}
+.nav-btn-restart {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.nav-btn-restart:hover {
+    background: #fecaca;
+}
+.scenario-context {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+.character-dialogue {
+    background: #e8f4f8;
+    border-left: 4px solid #17a2b8;
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+}
+.character-name {
+    font-weight: bold;
+    color: #0c5460;
+    font-style: normal;
+}
+.decision-prompt {
+    font-weight: 600;
+    color: #333;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+.feedback-correct {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+.feedback-incorrect {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+.feedback-partial {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 0 8px 8px 0;
+}
+.source-reference {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9em;
+}
+.consequence {
+    background: #e2e3e5;
+    border-left: 4px solid #6c757d;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+}
+.theme-atmosphere {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border-left: 4px solid #9333ea;
+    padding: 14px 16px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #581c87;
+}
+.points-earned {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.points-missed {
+    display: inline-block;
+    background: #dc2626;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.points-partial {
+    display: inline-block;
+    background: #f59e0b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+.score-display {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    text-align: center;
+}
+.score-display .label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.score-display .value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #667eea;
+}
+.results-box {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+}
+.results-box.passed {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+.results-box.failed {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+.results-score {
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+}
+.results-box.passed .results-score { color: #28a745; }
+.results-box.failed .results-score { color: #dc3545; }
+.results-status {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 10px 0 20px;
+}
+.concept-result {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+.concept-result.correct { border-left: 4px solid #28a745; }
+.concept-result.incorrect { border-left: 4px solid #dc3545; }
+.concept-result.partial { border-left: 4px solid #f59e0b; }
+.chapter-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+    color: white;
+    padding: 16px 20px;
+    margin: -32px -32px 24px -32px;
+    border-radius: 16px 16px 0 0;
+}
+.chapter-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.chapter-header .chapter-num {
+    opacity: 0.8;
+    font-size: 0.85rem;
+}
+</style>
+</head>
+<body>
+<tw-storydata name="EdQuest: Time Travel Adventure" startnode="1" creator="EdQuest"
+creator-version="2.0.0" ifid="D0092434-18F3-4555-A3E1-2DEFDA496830" zoom="1" format="Harlowe" format-version="3.3.9"
+options="" tags="" hidden>
+<style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style>
+<script role="script" id="twine-user-script" type="text/twine-javascript"></script>
+<tw-passagedata pid="1" name="Start" tags="" position="100,100" size="100,100">&lt;div class=&quot;chapter-header&quot;&gt;
+&lt;span class=&quot;chapter-num&quot;&gt;Welcome&lt;/span&gt;
+&lt;h2&gt;Time Travel Adventure&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;theme-atmosphere&quot;&gt;
+Ancient mysteries whisper from carved stone as modern leadership theories face their ultimate test in the unforgiving wilderness.
+&lt;/div&gt;
+
+The morning mist clings to ancient stone ruins deep in the Amazon basin as your expedition team prepares for what could be the archaeological discovery of the century. Your team has uncovered what appears to be a lost civilization&#x27;s temple complex, complete with intricate carvings that seem to depict advanced knowledge of astronomy and engineering. But this isn&#x27;t just any expedition—you&#x27;re leading a diverse research team funded by the McGregor Foundation, established by the late organizational theorist Douglas McGregor to study human behavior in extreme conditions. The foundation believes that leadership theories tested in comfortable academic settings need validation in high-stakes, real-world scenarios.
+
+Your team includes Dr. Kurt Lewin III, grandson of the famous leadership researcher, who insists on documenting every leadership decision you make. There&#x27;s also Sarah Chen, a young but brilliant archaeologist who reminds you of those innovative library students who redesigned work processes, and Marcus Webb, a veteran expedition leader whose authoritarian approach has kept teams alive in dangerous situations. The stakes couldn&#x27;t be higher—recent satellite imagery shows an approaching storm system that could flood the site for months, giving you only days to extract crucial artifacts while keeping your team safe and motivated.
+
+**Your Role:** Expedition leader responsible for team safety, archaeological discoveries, and managing diverse personalities under extreme time pressure
+
+**The Situation:** Your team discovers the ruins contain three distinct chambers, each requiring different leadership approaches to safely explore before the storms arrive, forcing you to apply McGregor&#x27;s theories and various leadership styles in life-or-death situations.
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+**You will be assessed on:**
+- Apply X and Y theory (10 pts)
+- Utilize different leadership styles appropriate to different situations, including authoritarian, democratic, and laissez-faire leadership styles. (10 pts)
+- Assess one&#x27;s own leadership style in different contexts. (10 pts)
+
+**Total Points:** 30 | **Passing Score:** 70%
+&lt;/div&gt;
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;Remember:&lt;/strong&gt; The correct answers require understanding and applying what you learned from the source materials.
+&lt;/div&gt;
+
+[[Begin your journey-&gt;Chapter 1 Setup]]</tw-passagedata>
+<tw-passagedata pid="2" name="Chapter 1 Setup" tags="" position="100,250" size="100,100">&lt;div class=&quot;chapter-header&quot;&gt;
+&lt;span class=&quot;chapter-num&quot;&gt;Chapter 1&lt;/span&gt;
+&lt;h2&gt;The Chamber of Assumptions&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;theme-atmosphere&quot;&gt;
+Ancient stone carvings seem to mock modern leadership theories as your team faces their first real test in the shadows of forgotten civilizations.
+&lt;/div&gt;
+
+The first chamber&#x27;s entrance is partially collapsed, requiring careful manual excavation by your team. As you gather everyone around the site, you notice distinct attitudes emerging. Marcus Webb crosses his arms and mutters about &#x27;lazy academics who need constant supervision,&#x27; while Sarah Chen is already sketching the hieroglyphs with obvious enthusiasm. Dr. Lewin observes quietly, tablet in hand, documenting every interaction. The carved symbols above the entrance seem to depict two groups of people—one being driven to work by overseers with whips, the other working joyfully on their own initiative.
+
+The narrow passage requires team members to work in cramped, uncomfortable conditions for hours, carefully removing debris while preserving artifacts. Some team members are already showing reluctance, glancing nervously at the unstable-looking ceiling. Others, like Sarah, seem energized by the challenge. You realize this moment will reveal your fundamental assumptions about human nature—the very theories Douglas McGregor wrote about decades ago.
+
+As complaints about the difficult working conditions begin to surface, you must decide how to approach motivating your team—revealing whether your leadership philosophy aligns more with Theory X or Theory Y assumptions about human nature.
+
+[[Continue-&gt;Decision 1.1]]</tw-passagedata>
+<tw-passagedata pid="3" name="Decision 1.1" tags="" position="100,400" size="100,100">**Decision Point 1.1** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;10 pts&lt;/span&gt;
+
+
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+Team member Jake throws down his brush and declares, &#x27;This is impossible work in these conditions. Someone&#x27;s going to get hurt, and for what? Some old rocks?&#x27; Several others nod in agreement, looking to you for direction. Marcus steps forward, &#x27;See? I told you—people avoid hard work unless you make them do it. We need strict schedules and consequences.&#x27; Sarah counters, &#x27;But we&#x27;re here because we love discovery! Jake just needs to see the bigger picture.&#x27; Dr. Lewin watches intently, stylus poised over his tablet. The chamber entrance looms before you, promising secrets but demanding sacrifice.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+Your response will reveal your core assumptions about human motivation. How do you address the team&#x27;s resistance?
+&lt;/div&gt;
+
+[[Share the discovery&#x27;s significance and trust their passion-&gt;Decision 1.1 Good]]
+[[Set strict work schedules with rotation breaks-&gt;Decision 1.1 Partial]]
+[[Threaten to dock pay for anyone who doesn&#x27;t work-&gt;Decision 1.1 Wronga]]</tw-passagedata>
+<tw-passagedata pid="4" name="Decision 1.1 Good" tags="" position="100,550" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Good approach!&lt;/strong&gt;
+&lt;/div&gt;
+
+Most team members become re-energized and work more efficiently, though Jake remains skeptical. Sarah begins explaining findings to others, creating peer motivation.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Team shows self-motivation but you&#x27;ll need to handle Jake&#x27;s continued resistance differently
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 1.2]]</tw-passagedata>
+<tw-passagedata pid="5" name="Decision 1.1 Partial" tags="" position="100,650" size="100,100">&lt;div class=&quot;feedback-partial&quot;&gt;
+&lt;strong&gt;Partially effective.&lt;/strong&gt;
+&lt;/div&gt;
+
+Team complies but works mechanically without enthusiasm. Progress is steady but uninspired, and creative problem-solving decreases.
+
+&lt;div class=&quot;consequence&quot;&gt;
+When unexpected challenges arise, team waits for your direction instead of taking initiative
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 1.2]]</tw-passagedata>
+<tw-passagedata pid="6" name="Decision 1.1 Wronga" tags="" position="100,750" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This creates problems.&lt;/strong&gt;
+&lt;/div&gt;
+
+Team becomes resentful and suspicious. They work but constantly watch for opportunities to slack off when you&#x27;re not looking.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Discover team members hiding problems instead of reporting them, creating dangerous conditions
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 1.2]]</tw-passagedata>
+<tw-passagedata pid="7" name="Decision 1.2" tags="" position="100,850" size="100,100">**Decision Point 1.2** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;0 pts&lt;/span&gt;
+
+&lt;div class=&quot;consequence&quot;&gt;Your initial approach has set the tone for how team members view their work and their relationship with leadership&lt;/div&gt;
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+Three hours into the excavation, Sarah discovers a hidden mechanism in the wall that could open a secret passage—but activating it might destabilize the entire chamber. If your first approach inspired trust and passion, team members eagerly gather to discuss options. If you were controlling, they wait nervously for orders. If you were threatening, they seem afraid to report potential problems. Jake approaches you privately: &#x27;I&#x27;ve been thinking about what you said earlier...&#x27;
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+How do you handle this critical decision-making moment that could determine the expedition&#x27;s success or failure?
+&lt;/div&gt;
+
+[[Involve team in collaborative decision-making process-&gt;Correct 1]]
+[[Make the decision yourself to maintain control-&gt;Incorrect 1a]]</tw-passagedata>
+<tw-passagedata pid="8" name="Correct 1" tags="correct concept-1" position="100,1000" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Excellent work!&lt;/strong&gt; &lt;span class=&quot;points-earned&quot;&gt;+10 points&lt;/span&gt;
+&lt;/div&gt;
+
+Team members contribute diverse expertise, identifying safety measures you hadn&#x27;t considered. Their commitment to the group decision leads to successful activation of the mechanism.
+
+Theory Y assumes people will show responsibility and self-control toward goals to which they are committed, and can engage in creative problem-solving when given the opportunity.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;From the source material:&lt;/strong&gt; In the proper environment, the average person learns to accept and seek responsibility.
+&lt;/div&gt;
+
+As your team emerges from the first chamber with invaluable artifacts and new insights, Dr. Lewin approaches with his tablet. &#x27;Fascinating,&#x27; he murmurs, &#x27;Your assumptions about human nature directly predicted your team&#x27;s performance. McGregor would be proud—or concerned, depending on which theory you demonstrated.&#x27; The success or struggles of this first challenge will echo through the remaining expedition.
+
+[[Continue-&gt;Chapter 2 Setup]]</tw-passagedata>
+<tw-passagedata pid="9" name="Incorrect 1a" tags="incorrect concept-1" position="100,1150" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This approach didn&#x27;t work.&lt;/strong&gt; &lt;span class=&quot;points-missed&quot;&gt;0 points&lt;/span&gt;
+&lt;/div&gt;
+
+You miss crucial safety insights that team members noticed but didn&#x27;t feel empowered to share. The mechanism activates but causes minor cave-in that could have been prevented.
+
+Theory X assumption that people need to be directed and controlled prevents you from accessing the team&#x27;s collective wisdom and problem-solving abilities.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;The better approach:&lt;/strong&gt; Theory Y assumes people will show responsibility and self-control toward goals to which they are committed, and can engage in creative problem-solving when given the opportunity.
+&lt;/div&gt;
+
+As your team emerges from the first chamber with invaluable artifacts and new insights, Dr. Lewin approaches with his tablet. &#x27;Fascinating,&#x27; he murmurs, &#x27;Your assumptions about human nature directly predicted your team&#x27;s performance. McGregor would be proud—or concerned, depending on which theory you demonstrated.&#x27; The success or struggles of this first challenge will echo through the remaining expedition.
+
+[[Continue-&gt;Chapter 2 Setup]]</tw-passagedata>
+<tw-passagedata pid="10" name="Chapter 2 Setup" tags="" position="100,1300" size="100,100">&lt;div class=&quot;chapter-header&quot;&gt;
+&lt;span class=&quot;chapter-num&quot;&gt;Chapter 2&lt;/span&gt;
+&lt;h2&gt;The Passage of Three Paths&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;theme-atmosphere&quot;&gt;
+Three ancient paths diverge in the torchlit chamber, each whispering of different ways to lead, as thunder rumbles ominously overhead.
+&lt;/div&gt;
+
+The second chamber presents a unique challenge: three distinct passages branch off from the main room, each requiring different expertise and approaches. Ancient murals suggest these paths were designed to test different aspects of leadership—one depicts authoritative figures directing workers in dangerous conditions, another shows collaborative decision-making around a fire, and the third illustrates individuals working independently on separate tasks. Dr. Lewin points excitedly at his tablet, &#x27;These murals perfectly represent the three leadership styles my grandfather studied!&#x27;
+
+Storm clouds are gathering outside, and you have only enough time to properly explore two of the three passages. Your team&#x27;s diverse personalities and skills mean different approaches will be needed for each path. Marcus argues for taking charge and assigning people to passages, Sarah suggests the team should vote on which passages to explore, while quiet team member David simply starts examining the artifacts near the third passage on his own initiative.
+
+With time running short and three different passage challenges ahead, you must choose which leadership style to employ for each situation—and which passage to sacrifice to the approaching storm.
+
+[[Continue-&gt;Decision 2.1]]</tw-passagedata>
+<tw-passagedata pid="11" name="Decision 2.1" tags="" position="100,1450" size="100,100">**Decision Point 2.1** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;10 pts&lt;/span&gt;
+
+
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+The leftmost passage shows signs of structural instability—loose rocks and unstable ceiling beams that could collapse without warning. This requires precise, coordinated work where one mistake could injure or trap team members. The middle passage appears safer but contains complex astronomical instruments that require careful collaborative analysis to understand. The rightmost passage seems stable and contains individual workstations with clear artifact preservation tasks that could be handled independently. Marcus says, &#x27;We need strict control in that dangerous passage.&#x27; Sarah argues, &#x27;The astronomical instruments need all our minds working together.&#x27; David quietly continues his independent work.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+You must match appropriate leadership styles to each situation while choosing which passages to prioritize.
+&lt;/div&gt;
+
+[[Use authoritarian style for dangerous passage first-&gt;Decision 2.1 Good]]
+[[Try democratic approach in the dangerous passage-&gt;Decision 2.1 Partial]]
+[[Let team members choose their own passages freely-&gt;Decision 2.1 Wronga]]</tw-passagedata>
+<tw-passagedata pid="12" name="Decision 2.1 Good" tags="" position="100,1600" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Good approach!&lt;/strong&gt;
+&lt;/div&gt;
+
+Your clear, direct commands ensure perfect coordination in the unstable passage. Team members follow safety protocols precisely, preventing accidents while extracting key artifacts.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Success builds trust for your situational leadership judgment, making the team more receptive to different approaches in the remaining passage
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 2.2]]</tw-passagedata>
+<tw-passagedata pid="13" name="Decision 2.1 Partial" tags="" position="100,1700" size="100,100">&lt;div class=&quot;feedback-partial&quot;&gt;
+&lt;strong&gt;Partially effective.&lt;/strong&gt;
+&lt;/div&gt;
+
+Team discussion about safety procedures takes valuable time, and disagreement about who should do what creates confusion. Minor rock fall occurs during debate.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Team becomes nervous about your decision-making ability, making subsequent leadership more challenging
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 2.2]]</tw-passagedata>
+<tw-passagedata pid="14" name="Decision 2.1 Wronga" tags="" position="100,1800" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This creates problems.&lt;/strong&gt;
+&lt;/div&gt;
+
+Everyone wants to avoid the dangerous passage, while too many crowd into the interesting astronomical chamber. Work becomes inefficient and dangerous passage remains unexplored.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Lack of coordination creates chaos, and you must spend time reorganizing instead of exploring
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 2.2]]</tw-passagedata>
+<tw-passagedata pid="15" name="Decision 2.2" tags="" position="100,1900" size="100,100">**Decision Point 2.2** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;0 pts&lt;/span&gt;
+
+&lt;div class=&quot;consequence&quot;&gt;Your first passage decision has affected team confidence and established expectations about your leadership adaptability&lt;/div&gt;
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+With the dangerous passage successfully completed using authoritarian leadership, you now face the astronomical chamber where ancient instruments require interpretation. The devices seem to be calculating celestial movements, but understanding their purpose requires combining Sarah&#x27;s archaeological knowledge, Dr. Lewin&#x27;s research expertise, Marcus&#x27;s practical experience, and others&#x27; diverse insights. However, time pressure is mounting as thunder grows louder outside. Your earlier leadership success makes the team more willing to trust your approach, but they&#x27;re also watching to see if you can adapt your style to this very different challenge.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+This collaborative analysis task requires a completely different leadership approach than the previous dangerous situation.
+&lt;/div&gt;
+
+[[Facilitate democratic discussion and shared analysis-&gt;Decision 2.2 Good]]
+[[Continue using authoritarian commands for speed-&gt;Decision 2.2 Wronga]]</tw-passagedata>
+<tw-passagedata pid="16" name="Decision 2.2 Good" tags="" position="100,2050" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Good approach!&lt;/strong&gt;
+&lt;/div&gt;
+
+Your choice leads to a positive development.
+
+&lt;div class=&quot;consequence&quot;&gt;
+The situation continues to develop.
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 2.3]]</tw-passagedata>
+<tw-passagedata pid="17" name="Decision 2.2 Wronga" tags="" position="100,2150" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This creates problems.&lt;/strong&gt;
+&lt;/div&gt;
+
+Your choice leads to complications.
+
+&lt;div class=&quot;consequence&quot;&gt;
+You now face additional challenges.
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 2.3]]</tw-passagedata>
+<tw-passagedata pid="18" name="Decision 2.3" tags="" position="100,2250" size="100,100">**Decision Point 2.3** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;0 pts&lt;/span&gt;
+
+&lt;div class=&quot;consequence&quot;&gt;Your leadership style choices have demonstrated your ability to adapt approaches to different situations&lt;/div&gt;
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+As the team finishes with the astronomical chamber, you notice David has been working quietly and efficiently in the third passage, cataloging artifacts without supervision. He&#x27;s made significant progress using careful, methodical techniques. Other team members are exhausted from the intensive collaborative work and dangerous excavation. Rain begins pattering outside—you have perhaps 30 minutes before you must evacuate. David looks up: &#x27;I can finish this section if you just let me work, but I could use one assistant who won&#x27;t micromanage me.&#x27;
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+This situation calls for determining when laissez-faire leadership is most appropriate.
+&lt;/div&gt;
+
+[[Use laissez-faire approach with David&#x27;s independent work-&gt;Correct 2]]
+[[Supervise David closely to ensure quality work-&gt;Incorrect 2a]]</tw-passagedata>
+<tw-passagedata pid="19" name="Correct 2" tags="correct concept-2" position="100,2400" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Excellent work!&lt;/strong&gt; &lt;span class=&quot;points-earned&quot;&gt;+10 points&lt;/span&gt;
+&lt;/div&gt;
+
+David and his chosen assistant work with remarkable efficiency, completing the artifact documentation just as evacuation becomes necessary. His self-motivated approach proves highly effective.
+
+Laissez-faire leadership works best with experienced, self-motivated individuals who have clear goals and don&#x27;t need direction or support from the leader.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;From the source material:&lt;/strong&gt; Laissez-faire leadership works best when followers are experienced and self-motivated, have high degrees of expertise, and are committed to their work.
+&lt;/div&gt;
+
+As you lead your team out of the chamber just as the first heavy raindrops fall, Dr. Lewin scrolls through his notes with excitement. &#x27;Remarkable adaptation,&#x27; he says. &#x27;You&#x27;ve demonstrated what my grandfather theorized—that effective leaders must adjust their style based on the situation and the followers&#x27; needs. Authoritarian when safety demanded it, democratic when creativity was required, laissez-faire when expertise and motivation were already present.&#x27; The team looks to you with newfound respect, having experienced firsthand how situational leadership can maximize both safety and productivity.
+
+[[Continue-&gt;Chapter 3 Setup]]</tw-passagedata>
+<tw-passagedata pid="20" name="Incorrect 2a" tags="incorrect concept-2" position="100,2550" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This approach didn&#x27;t work.&lt;/strong&gt; &lt;span class=&quot;points-missed&quot;&gt;0 points&lt;/span&gt;
+&lt;/div&gt;
+
+Your oversight disrupts David&#x27;s efficient workflow and creates tension. Less work gets completed, and David becomes frustrated with the unnecessary supervision.
+
+Experienced, self-motivated team members can become less productive when subjected to unnecessary supervision and control.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;The better approach:&lt;/strong&gt; Laissez-faire leadership works best with experienced, self-motivated individuals who have clear goals and don&#x27;t need direction or support from the leader.
+&lt;/div&gt;
+
+As you lead your team out of the chamber just as the first heavy raindrops fall, Dr. Lewin scrolls through his notes with excitement. &#x27;Remarkable adaptation,&#x27; he says. &#x27;You&#x27;ve demonstrated what my grandfather theorized—that effective leaders must adjust their style based on the situation and the followers&#x27; needs. Authoritarian when safety demanded it, democratic when creativity was required, laissez-faire when expertise and motivation were already present.&#x27; The team looks to you with newfound respect, having experienced firsthand how situational leadership can maximize both safety and productivity.
+
+[[Continue-&gt;Chapter 3 Setup]]</tw-passagedata>
+<tw-passagedata pid="21" name="Chapter 3 Setup" tags="" position="100,2700" size="100,100">&lt;div class=&quot;chapter-header&quot;&gt;
+&lt;span class=&quot;chapter-num&quot;&gt;Chapter 3&lt;/span&gt;
+&lt;h2&gt;The Mirror of Leadership&lt;/h2&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;theme-atmosphere&quot;&gt;
+Infinite reflections fragment your image as ancient wisdom confronts modern leadership theory, while storm winds howl through the ruins above.
+&lt;/div&gt;
+
+The final chamber contains the most extraordinary discovery yet—a circular room with polished obsidian mirrors covering every wall, creating infinite reflections that seem to shift and dance in the torchlight. At the center stands an ancient altar with inscriptions in multiple languages, including some that appear remarkably similar to modern organizational theory concepts. Dr. Lewin gasps, &#x27;These inscriptions—they&#x27;re describing leadership assessment methods that predate my grandfather&#x27;s work by centuries!&#x27; But the chamber presents a final challenge: the floor is unstable, and the team must work in small groups while you coordinate from different positions, unable to directly observe everyone simultaneously.
+
+As the mirrors reflect your movements, you begin to see yourself from multiple perspectives—how you look when giving orders, when listening to team input, when stepping back to let others work. Sarah notices something crucial: &#x27;The mirrors aren&#x27;t just reflective—they&#x27;re positioned to show leaders how they appear to their followers from different angles.&#x27; Meanwhile, outside, the storm has arrived in earnest. This is your final chance to extract the most valuable artifacts, but success will require deep self-awareness about your leadership patterns and the ability to adapt them one final time.
+
+As you position team members around the unstable chamber, the mirrors force you to literally see yourself as others see you, while the critical final extraction demands that you demonstrate true self-awareness about your leadership strengths and blind spots.
+
+[[Continue-&gt;Decision 3.1]]</tw-passagedata>
+<tw-passagedata pid="22" name="Decision 3.1" tags="" position="100,2850" size="100,100">**Decision Point 3.1** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;10 pts&lt;/span&gt;
+
+
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+Working in the mirrored chamber, you catch glimpses of yourself leading from multiple angles. When you give instructions to Marcus, you see yourself appearing confident and decisive. When listening to Sarah&#x27;s ideas, you notice you lean in and nod—body language you weren&#x27;t aware of. But when Tom asks a question while you&#x27;re focused on the unstable floor, you see yourself dismiss him with an impatient wave. Dr. Vasquez approaches: &#x27;The floor can only support three people at a time around the altar, but we need different expertise for each artifact type. How do you want to coordinate this?&#x27; In the mirrors, you see your team watching your face, waiting for direction while dealing with their own stress about the unstable conditions and time pressure.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+The mirrors are revealing aspects of your leadership style you haven&#x27;t recognized. How do you use this self-awareness?
+&lt;/div&gt;
+
+[[Acknowledge what you&#x27;re learning and adjust approach-&gt;Decision 3.1 Good]]
+[[Focus on the task and ignore the mirror reflections-&gt;Decision 3.1 Partial]]
+[[Become self-conscious and change your natural style-&gt;Decision 3.1 Wronga]]</tw-passagedata>
+<tw-passagedata pid="23" name="Decision 3.1 Good" tags="" position="100,3000" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Good approach!&lt;/strong&gt;
+&lt;/div&gt;
+
+You apologize to Tom and ask for his input, then explain to the team how you&#x27;re adapting based on what you&#x27;re observing about yourself. This transparency builds trust and encourages open communication.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Team becomes more willing to give you honest feedback, helping you lead more effectively in the final critical moments
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 3.2]]</tw-passagedata>
+<tw-passagedata pid="24" name="Decision 3.1 Partial" tags="" position="100,3100" size="100,100">&lt;div class=&quot;feedback-partial&quot;&gt;
+&lt;strong&gt;Partially effective.&lt;/strong&gt;
+&lt;/div&gt;
+
+You maintain task efficiency but miss opportunities for growth and relationship building. Team follows orders but doesn&#x27;t feel engaged or valued for their input.
+
+&lt;div class=&quot;consequence&quot;&gt;
+When unexpected problems arise, team members hesitate to speak up with solutions
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 3.2]]</tw-passagedata>
+<tw-passagedata pid="25" name="Decision 3.1 Wronga" tags="" position="100,3200" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This creates problems.&lt;/strong&gt;
+&lt;/div&gt;
+
+Your sudden behavior changes confuse the team and make you appear uncertain. Your leadership effectiveness decreases as you second-guess every decision.
+
+&lt;div class=&quot;consequence&quot;&gt;
+Team loses confidence in your leadership at the worst possible moment
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 3.2]]</tw-passagedata>
+<tw-passagedata pid="26" name="Decision 3.2" tags="" position="100,3300" size="100,100">**Decision Point 3.2** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;0 pts&lt;/span&gt;
+
+&lt;div class=&quot;consequence&quot;&gt;Your response to self-awareness has affected team dynamics and your effectiveness as the final extraction becomes critical&lt;/div&gt;
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+The team&#x27;s feedback reveals patterns you hadn&#x27;t recognized: you tend to be more authoritarian under time pressure, more democratic when you feel knowledgeable about the subject, and you rarely use laissez-faire approaches even when team members demonstrate expertise. Dr. Lewin shares his observations: &#x27;You&#x27;ve shown remarkable situational awareness, but there&#x27;s a pattern—you default to control when stressed.&#x27; Suddenly, a section of floor cracks near the altar. Dr. Vasquez shouts, &#x27;We have maybe ten minutes before this whole section becomes unsafe!&#x27; The most valuable artifact—a crystalline device that could revolutionize understanding of ancient technology—sits in the most dangerous position.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+This final crisis will test whether you can apply your new self-awareness under ultimate pressure.
+&lt;/div&gt;
+
+[[Apply lessons learned about your stress patterns-&gt;Decision 3.2 Good]]
+[[Revert to your natural high-control response-&gt;Decision 3.2 Wronga]]</tw-passagedata>
+<tw-passagedata pid="27" name="Decision 3.2 Good" tags="" position="100,3450" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Good approach!&lt;/strong&gt;
+&lt;/div&gt;
+
+Your choice leads to a positive development.
+
+&lt;div class=&quot;consequence&quot;&gt;
+The situation continues to develop.
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 3.3]]</tw-passagedata>
+<tw-passagedata pid="28" name="Decision 3.2 Wronga" tags="" position="100,3550" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This creates problems.&lt;/strong&gt;
+&lt;/div&gt;
+
+Your choice leads to complications.
+
+&lt;div class=&quot;consequence&quot;&gt;
+You now face additional challenges.
+&lt;/div&gt;
+
+[[Continue-&gt;Decision 3.3]]</tw-passagedata>
+<tw-passagedata pid="29" name="Decision 3.3" tags="" position="100,3650" size="100,100">**Decision Point 3.3** &lt;span class=&quot;points-earned&quot; style=&quot;background:#667eea&quot;&gt;0 pts&lt;/span&gt;
+
+&lt;div class=&quot;consequence&quot;&gt;Your ability to apply self-awareness under pressure has determined the final outcome&lt;/div&gt;
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+As the team evacuates the collapsing chamber with the precious artifacts, the mirrors catch your reflection one final time. But now, instead of seeing fragmented images of different leadership moments, you see a more complete picture—a leader who understands their natural tendencies, recognizes the impact of stress on their style, and can consciously choose approaches based on situational needs rather than just instinct. The team gathers at the cave entrance as rain pours down. Dr. Lewin approaches with his tablet full of observations, while team members look to you for final direction about securing the artifacts and planning the evacuation route.
+&lt;/div&gt;
+
+&lt;div class=&quot;decision-prompt&quot;&gt;
+How will you integrate everything you&#x27;ve learned about your leadership style into future leadership decisions?
+&lt;/div&gt;
+
+[[Commit to ongoing self-reflection and team feedback-&gt;Correct 3]]
+[[Assume this one experience has taught you everything-&gt;Incorrect 3a]]</tw-passagedata>
+<tw-passagedata pid="30" name="Correct 3" tags="correct concept-3" position="100,3800" size="100,100">&lt;div class=&quot;feedback-correct&quot;&gt;
+&lt;strong&gt;Excellent work!&lt;/strong&gt; &lt;span class=&quot;points-earned&quot;&gt;+10 points&lt;/span&gt;
+&lt;/div&gt;
+
+You establish regular check-ins with team members and create systems for continued self-assessment. The expedition becomes a model for leadership development in extreme conditions.
+
+Effective leadership development requires ongoing self-assessment and commitment to growth, not just one-time awareness.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;From the source material:&lt;/strong&gt; These values, beliefs, and expectations about people and work have a significant impact on an individual&#x27;s leadership style and probably come into play in every aspect of their leadership.
+&lt;/div&gt;
+
+As your team makes their way back through the jungle, artifacts safely secured, Dr. Lewin shares his final observations. &#x27;The ancient builders of these chambers understood something we&#x27;re only rediscovering—that true leadership requires not just knowledge of techniques, but deep self-awareness and the ability to adapt based on both situation and personal growth.&#x27; The mirrors of the final chamber were more than archaeological curiosities—they were tools for the kind of leadership development that transforms both leaders and their teams.
+
+[[Continue-&gt;Results]]</tw-passagedata>
+<tw-passagedata pid="31" name="Incorrect 3a" tags="incorrect concept-3" position="100,3950" size="100,100">&lt;div class=&quot;feedback-incorrect&quot;&gt;
+&lt;strong&gt;This approach didn&#x27;t work.&lt;/strong&gt; &lt;span class=&quot;points-missed&quot;&gt;0 points&lt;/span&gt;
+&lt;/div&gt;
+
+Without ongoing development, you gradually revert to old patterns. The insights from the expedition fade as daily pressures reassert themselves.
+
+Leadership assessment and development must be ongoing processes, not single events, to create lasting change.
+
+&lt;div class=&quot;source-reference&quot;&gt;
+&lt;strong&gt;The better approach:&lt;/strong&gt; Effective leadership development requires ongoing self-assessment and commitment to growth, not just one-time awareness.
+&lt;/div&gt;
+
+As your team makes their way back through the jungle, artifacts safely secured, Dr. Lewin shares his final observations. &#x27;The ancient builders of these chambers understood something we&#x27;re only rediscovering—that true leadership requires not just knowledge of techniques, but deep self-awareness and the ability to adapt based on both situation and personal growth.&#x27; The mirrors of the final chamber were more than archaeological curiosities—they were tools for the kind of leadership development that transforms both leaders and their teams.
+
+[[Continue-&gt;Results]]</tw-passagedata>
+<tw-passagedata pid="32" name="Results" tags="ending results" position="100,4100" size="100,100">&lt;div class=&quot;chapter-header&quot;&gt;
+&lt;span class=&quot;chapter-num&quot;&gt;Journey Complete&lt;/span&gt;
+&lt;h2&gt;Time Travel Adventure&lt;/h2&gt;
+&lt;/div&gt;
+
+{RESULTS_BOX}
+
+&lt;div class=&quot;scenario-context&quot;&gt;
+The expedition returns to base camp as heroes, with artifacts that will reshape understanding of ancient civilizations and leadership insights that will influence modern organizational theory. Dr. Lewin&#x27;s documentation of your leadership decisions becomes a landmark study, while team members speak glowingly of how your situational awareness and self-reflection created an environment where everyone could contribute their best. The McGregor Foundation funds a follow-up expedition, specifically requesting your leadership. As you stand in the museum months later, looking at the displayed artifacts, you realize the greatest discovery wasn&#x27;t ancient technology—it was understanding how timeless leadership principles adapt to any challenge, from corporate boardrooms to collapsing temples.
+&lt;/div&gt;
+
+Thank you for completing this immersive assessment. Your score reflects your ability to apply the concepts through realistic decision-making chains.
+
+[[Start Again-&gt;Start]]</tw-passagedata>
+</tw-storydata>
+<script>
+const GRADING_CONFIG = {"enabled": true, "conceptPoints": {"Apply X and Y theory": 10, "Utilize different leadership styles appropriate to different situations, including authoritarian, democratic, and laissez-faire leadership styles.": 10, "Assess one's own leadership style in different contexts.": 10}, "passingThreshold": 70, "totalPoints": 30, "passingPoints": 21};
+
+(function() {
+    const storyData = document.querySelector('tw-storydata');
+    const passages = {};
+    const history = [];
+
+    storyData.querySelectorAll('tw-passagedata').forEach(p => {
+        passages[p.getAttribute('name')] = {
+            pid: p.getAttribute('pid'),
+            content: p.textContent,
+            tags: (p.getAttribute('tags') || '').split(' ').filter(t => t)
+        };
+    });
+
+    const startNode = storyData.getAttribute('startnode');
+    let startPassage = null;
+    for (const [name, data] of Object.entries(passages)) {
+        if (data.pid === startNode) {
+            startPassage = name;
+            break;
+        }
+    }
+
+    const grading = {
+        enabled: typeof GRADING_CONFIG !== 'undefined' && GRADING_CONFIG.enabled,
+        config: typeof GRADING_CONFIG !== 'undefined' ? GRADING_CONFIG : {},
+        score: 0,
+        conceptResults: {},
+        initialized: false
+    };
+
+    if (grading.enabled) {
+        for (const [concept, points] of Object.entries(grading.config.conceptPoints || {})) {
+            grading.conceptResults[concept] = { correct: false, points: points, earned: 0, attempts: 0, answered: false };
+        }
+    }
+
+    let scoreDisplay = null;
+    if (grading.enabled) {
+        scoreDisplay = document.createElement('div');
+        scoreDisplay.className = 'score-display';
+        scoreDisplay.innerHTML = '<div class="label">Score</div><div class="value">0</div><div class="label">of ' + grading.config.totalPoints + '</div>';
+        document.body.appendChild(scoreDisplay);
+    }
+
+    function updateScoreDisplay() {
+        if (scoreDisplay) {
+            scoreDisplay.querySelector('.value').textContent = grading.score;
+        }
+    }
+
+    function getConceptFromPassage(passageName) {
+        // Match patterns like "Correct 1", "Incorrect 2a", "Partial 1b"
+        const match = passageName.match(/(Correct|Incorrect|Partial)\s+(\d+)/);
+        if (match) {
+            const num = parseInt(match[2]);
+            const concepts = Object.keys(grading.config.conceptPoints || {});
+            if (num <= concepts.length) {
+                return {
+                    concept: concepts[num - 1],
+                    isCorrect: match[1] === 'Correct',
+                    isPartial: match[1] === 'Partial'
+                };
+            }
+        }
+        return null;
+    }
+
+    const storyEl = document.createElement('tw-story');
+    document.body.appendChild(storyEl);
+
+    function showPassage(name, addToHistory = true) {
+        const passage = passages[name];
+        if (!passage) {
+            storyEl.innerHTML = '<tw-passage><p>Error: Passage not found: ' + name + '</p></tw-passage>';
+            return;
+        }
+
+        if (addToHistory && history[history.length - 1] !== name) {
+            history.push(name);
+        }
+
+        if (grading.enabled) {
+            const conceptInfo = getConceptFromPassage(name);
+            if (conceptInfo && grading.conceptResults[conceptInfo.concept]) {
+                const result = grading.conceptResults[conceptInfo.concept];
+                result.attempts++;
+                if (!result.answered) {
+                    if (conceptInfo.isCorrect) {
+                        result.correct = true;
+                        result.answered = true;
+                        result.earned = result.points;
+                        grading.score += result.points;
+                        updateScoreDisplay();
+                    } else if (conceptInfo.isPartial) {
+                        result.answered = true;
+                        result.earned = Math.floor(result.points * 0.5);
+                        grading.score += result.earned;
+                        updateScoreDisplay();
+                    }
+                }
+            }
+        }
+
+        let content = passage.content;
+
+        if (name === 'Results' && grading.enabled) {
+            content = generateResultsContent();
+        }
+
+        content = content.replace(/\[\[([^\]]+)->([^\]]+)\]\]/g, (match, text, target) => {
+            return '<tw-link data-target="' + target + '">' + text + '</tw-link>';
+        });
+        content = content.replace(/\[\[([^\]]+)\]\]/g, (match, target) => {
+            return '<tw-link data-target="' + target + '">' + target + '</tw-link>';
+        });
+
+        if (grading.enabled) {
+            content = content.replace(/\{SCORE\}/g, grading.score);
+            content = content.replace(/\{TOTAL\}/g, grading.config.totalPoints);
+            content = content.replace(/\{PERCENTAGE\}/g, Math.round((grading.score / grading.config.totalPoints) * 100));
+            content = content.replace(/\{PASSING\}/g, grading.config.passingThreshold);
+            content = content.replace(/\{RESULTS_BOX\}/g, generateResultsBox());
+        }
+
+        content = content.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+
+        // Add navigation buttons (except on Start and Results)
+        let navButtons = '';
+        if (name !== 'Start' && name !== 'Results') {
+            navButtons = '<div class="nav-buttons">';
+            if (history.length > 1) {
+                navButtons += '<button class="nav-btn nav-btn-back" onclick="goBack()">Go Back</button>';
+            }
+            navButtons += '<button class="nav-btn nav-btn-restart" onclick="resetScenario()">Start Again</button>';
+            navButtons += '</div>';
+        }
+
+        const passageEl = document.createElement('tw-passage');
+        passageEl.innerHTML = content + navButtons;
+
+        storyEl.innerHTML = '';
+        storyEl.appendChild(passageEl);
+
+        passageEl.querySelectorAll('tw-link').forEach(link => {
+            link.addEventListener('click', () => {
+                showPassage(link.getAttribute('data-target'));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    }
+
+    function generateResultsBox() {
+        if (!grading.enabled) return '';
+        const percentage = Math.round((grading.score / grading.config.totalPoints) * 100);
+        const passed = percentage >= grading.config.passingThreshold;
+        const statusClass = passed ? 'passed' : 'failed';
+        const statusText = passed ? 'PASSED' : 'NEEDS REVIEW';
+
+        let conceptBreakdown = '';
+        for (const [concept, result] of Object.entries(grading.conceptResults)) {
+            let cls = result.correct ? 'correct' : (result.earned > 0 ? 'partial' : 'incorrect');
+            let icon = result.correct ? '\u2713' : (result.earned > 0 ? '~' : '\u2717');
+            let pts = result.earned > 0 ? '+' + result.earned : '0';
+            conceptBreakdown += '<div class="concept-result ' + cls + '"><span>' + icon + ' ' + concept + '</span><span>' + pts + ' / ' + result.points + ' pts</span></div>';
+        }
+
+        return '<div class="results-box ' + statusClass + '">' +
+            '<div class="results-score">' + percentage + '%</div>' +
+            '<div class="results-status">' + statusText + '</div>' +
+            '<div><strong>Score:</strong> ' + grading.score + ' / ' + grading.config.totalPoints + ' points</div>' +
+            '<div><strong>Required:</strong> ' + grading.config.passingThreshold + '%</div>' +
+            '<div style="margin-top:16px"><strong>Concept Breakdown:</strong></div>' +
+            conceptBreakdown + '</div>';
+    }
+
+    function generateResultsContent() {
+        return '**Your Results**\n\n{RESULTS_BOX}';
+    }
+
+    window.goBack = function() {
+        if (history.length > 1) {
+            history.pop(); // Remove current
+            const previous = history[history.length - 1];
+            showPassage(previous, false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    window.resetScenario = function() {
+        grading.score = 0;
+        history.length = 0;
+        for (const concept of Object.keys(grading.conceptResults)) {
+            grading.conceptResults[concept] = {
+                correct: false,
+                points: grading.conceptResults[concept].points,
+                earned: 0,
+                attempts: 0,
+                answered: false
+            };
+        }
+        updateScoreDisplay();
+        showPassage(startPassage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (startPassage) {
+        showPassage(startPassage);
+    }
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python twine_generator.py:*)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pip:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python server.py:*)",
+      "Bash(start http://localhost:5000)"
+    ]
+  }
+}

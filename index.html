@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdQuest - Educational Scenario Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #003366;
+            --primary-dark: #002244;
+            --primary-light: #e6eef5;
+            --accent: #FFD700;
+            --success: #059669;
+            --success-light: #d1fae5;
+            --error: #dc2626;
+            --error-light: #fee2e2;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --gray-50: #FFFFFF;
+            --gray-100: #F0F0F0;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #003366 0%, #004488 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: var(--gray-900);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        header .logo {
+            max-width: 140px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        header .tagline {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #FFD700;
+            display: block;
+            margin-bottom: 12px;
+            opacity: 1;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 40px;
+            margin-bottom: 24px;
+            border-top: 4px solid var(--accent);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+
+        label .hint {
+            font-weight: 400;
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        label .required {
+            color: var(--error);
+        }
+
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        select {
+            background: white;
+            cursor: pointer;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        textarea.content-textarea {
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Explanation Box */
+        .explanation-box {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border: 2px solid var(--primary);
+            border-left: 6px solid var(--accent);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .explanation-box h3 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .explanation-box p {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .explanation-box ul {
+            color: var(--gray-700);
+            margin-left: 20px;
+        }
+
+        .explanation-box li {
+            margin-bottom: 6px;
+        }
+
+        .explanation-box li strong {
+            color: var(--primary);
+        }
+
+        /* Theme Selector */
+        .theme-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .theme-selector select {
+            flex: 1;
+        }
+
+        .custom-theme-input {
+            display: none;
+        }
+
+        .custom-theme-input.visible {
+            display: block;
+        }
+
+        /* Content Sources Section */
+        .content-sources-section {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .content-sources-section h3 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .content-sources-section .section-desc {
+            color: var(--gray-700);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .source-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .source-tab {
+            padding: 10px 20px;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            transition: all 0.2s;
+        }
+
+        .source-tab:hover {
+            border-color: var(--accent);
+            color: var(--primary);
+        }
+
+        .source-tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .source-input-area {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .source-input-area.active {
+            display: block;
+        }
+
+        .add-source-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .add-source-btn:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .sources-list {
+            margin-top: 20px;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .source-item-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .source-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .source-item-title {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .source-item-preview {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 500px;
+        }
+
+        .source-item-remove {
+            padding: 6px 12px;
+            background: var(--error-light);
+            color: var(--error);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .source-item-remove:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        .no-sources-msg {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-500);
+            font-style: italic;
+        }
+
+        /* Grading Section */
+        .grading-section {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .grading-section h3 {
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .grading-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .grading-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* Scenario Structure Options */
+        .structure-options {
+            background: var(--primary-light);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 8px;
+        }
+
+        .structure-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .structure-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border: 2px solid var(--accent);
+        }
+
+        .checkbox-group:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #001133 100%);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .checkbox-group .checkbox-label {
+            flex: 1;
+        }
+
+        .checkbox-group .checkbox-label strong {
+            color: var(--accent);
+            font-size: 1.05rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .checkbox-group .checkbox-label span {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        /* Case Study Card */
+        .case-study-card {
+            display: none;
+            border-top: 4px solid var(--primary);
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0fa 100%);
+        }
+
+        .case-study-card.visible {
+            display: block;
+        }
+
+        .case-study-card .source-tabs {
+            margin-bottom: 16px;
+        }
+
+        .case-study-card .source-input-area {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .case-study-card .source-input-area.active {
+            display: block;
+        }
+
+        .required-badge {
+            display: inline-block;
+            background: var(--error);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        /* Rubric info callout */
+        .rubric-info {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e0efff 100%);
+            border: 1px solid var(--primary);
+            border-left: 4px solid var(--accent);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--gray-700);
+        }
+
+        .rubric-info strong {
+            color: var(--primary);
+        }
+
+        .concept-points-list {
+            margin-top: 16px;
+        }
+
+        .concept-points-list h4 {
+            font-size: 0.9rem;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+        }
+
+        .concept-point-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .concept-point-item .concept-name {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--gray-700);
+        }
+
+        .concept-point-item input[type="number"] {
+            width: 80px;
+            padding: 6px 10px;
+            text-align: center;
+        }
+
+        .total-points-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #003366 0%, #004488 100%);
+            color: var(--accent);
+            border-radius: 8px;
+            margin-top: 16px;
+            font-weight: 600;
+            border: 2px solid var(--accent);
+        }
+
+        .total-points-display .total-value {
+            font-size: 1.25rem;
+        }
+
+        .no-concepts-msg {
+            color: var(--gray-500);
+            font-style: italic;
+            font-size: 0.9rem;
+            padding: 12px;
+            text-align: center;
+        }
+
+        /* Generation Info Box */
+        .generation-info {
+            background: var(--gray-100);
+            border: 2px solid var(--primary);
+            border-left: 6px solid var(--accent);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .generation-info h4 {
+            font-size: 0.875rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .generation-info ul {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--gray-500);
+            font-size: 0.875rem;
+        }
+
+        .generation-info li {
+            margin-bottom: 4px;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #e6c200;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .alert.visible {
+            display: block;
+        }
+
+        .alert-error {
+            background: var(--error-light);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .alert-success {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        /* Preview */
+        .preview-section {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--gray-200);
+            display: none;
+        }
+
+        .preview-section.visible {
+            display: block;
+        }
+
+        .preview-section h3 {
+            margin-bottom: 16px;
+            color: var(--gray-700);
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 500px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 16px; }
+            header h1 { font-size: 1.75rem; }
+            .card { padding: 24px; }
+            .btn-group { flex-direction: column; }
+            .grading-row { flex-direction: column; }
+            .structure-row { flex-direction: column; }
+            .source-tabs { flex-direction: column; }
+            .theme-selector { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/EdQuest_Logo_FINAL.png" alt="EdQuest Logo" class="logo">
+            <p class="tagline">Scenario-Based Assessment Tool</p>
+            <p>Create immersive, AI-powered educational branching scenarios</p>
+        </header>
+
+        <div class="alert alert-error" id="errorAlert"></div>
+        <div class="alert alert-success" id="successAlert"></div>
+
+        <!-- Explanation Box -->
+        <div class="explanation-box">
+            <h3>What is EdQuest?</h3>
+            <p>
+                EdQuest uses Claude AI to transform your course materials and case studies into <strong>immersive
+                branching narratives where the student becomes the protagonist</strong>. Instead of simple quizzes,
+                students navigate complex scenarios with multiple decision chains, character interactions, and
+                <strong>meaningful consequences tied directly to their choices</strong>.
+            </p>
+            <p>
+                Upload a case study and EdQuest will build the entire scenario around YOUR content - the characters,
+                situations, and dilemmas come directly from your source material, not generic templates.
+            </p>
+            <ul>
+                <li><strong>Student as Protagonist:</strong> Immersive first-person narrative where students live the scenario</li>
+                <li><strong>Deep Branching:</strong> Multiple decision chains per concept with cause-and-effect consequences</li>
+                <li><strong>Case Study Integration:</strong> Scenarios built directly ON your uploaded content, not beside it</li>
+                <li><strong>Meaningful Consequences:</strong> Every choice leads to realistic outcomes that reinforce learning</li>
+                <li><strong>Theme Immersion:</strong> The chosen theme is woven throughout every interaction and setting</li>
+            </ul>
+        </div>
+
+        <form id="scenarioForm">
+            <!-- Scenario Setup Card -->
+            <div class="card">
+                <div class="card-title">Scenario Setup</div>
+
+                <!-- Theme Selector -->
+                <div class="form-group">
+                    <label for="themePreset">
+                        Scenario Theme <span class="required">*</span>
+                        <span class="hint">Choose a preset or create a custom theme</span>
+                    </label>
+                    <div class="theme-selector">
+                        <select id="themePreset" name="themePreset">
+                            <option value="">-- Select a preset theme --</option>
+                            <optgroup label="Professional Settings">
+                                <option value="Healthcare/Clinical Setting">Healthcare/Clinical Setting</option>
+                                <option value="Business/Corporate Environment">Business/Corporate Environment</option>
+                                <option value="Research Laboratory">Research Laboratory</option>
+                                <option value="Legal/Compliance Scenario">Legal/Compliance Scenario</option>
+                                <option value="Educational/Teaching Context">Educational/Teaching Context</option>
+                                <option value="Technical/Engineering Problem">Technical/Engineering Problem</option>
+                                <option value="Non-profit/NGO Organization">Non-profit/NGO Organization</option>
+                            </optgroup>
+                            <optgroup label="Adventure & Creative">
+                                <option value="Space Exploration Mission">Space Exploration Mission</option>
+                                <option value="Epic Adventure Quest">Epic Adventure Quest</option>
+                                <option value="Time Travel Adventure">Time Travel Adventure</option>
+                                <option value="Detective/Mystery Investigation">Detective/Mystery Investigation</option>
+                                <option value="Intercultural/Global Diplomacy">Intercultural/Global Diplomacy</option>
+                            </optgroup>
+                            <option value="custom">Custom Theme...</option>
+                        </select>
+                    </div>
+                    <div class="custom-theme-input" id="customThemeContainer">
+                        <input type="text" id="theme" name="theme"
+                               placeholder="e.g., Hospital Emergency Room, Corporate Ethics Meeting, Research Lab">
+                    </div>
+                </div>
+
+                <!-- Case Study Mode Toggle -->
+                <label class="checkbox-group" for="caseStudyMode">
+                    <input type="checkbox" id="caseStudyMode" name="caseStudyMode">
+                    <div class="checkbox-label">
+                        <strong>Case Study Mode</strong>
+                        <span>Choose a scenario theme above OR check this box to base the scenario on a case study instead.</span>
+                    </div>
+                </label>
+
+                <div class="form-group">
+                    <label for="learning_objectives">
+                        Learning Objectives <span class="required">*</span>
+                        <span class="hint">What students should be able to DO after completing this scenario (one per line)</span>
+                    </label>
+                    <textarea id="learning_objectives" name="learning_objectives"
+                              placeholder="Apply diagnostic criteria to identify patient conditions&#10;Evaluate treatment options based on patient symptoms&#10;Justify clinical decisions using evidence-based reasoning" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="key_concepts">
+                        Key Concepts to Assess <span class="required">*</span>
+                        <span class="hint">Each concept becomes a graded scenario - one per line</span>
+                    </label>
+                    <textarea id="key_concepts" name="key_concepts"
+                              placeholder="Differential diagnosis process&#10;Contraindications for common treatments&#10;Patient history interpretation&#10;Evidence-based decision making" required></textarea>
+                    <div class="rubric-info">
+                        <strong>Scoring Rubric:</strong> Each concept you enter becomes a criterion in the scoring rubric.
+                        Students earn points by making decisions that demonstrate understanding and correct application of each concept.
+                        The final score reflects mastery across all concepts.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grading Configuration Card -->
+            <div class="card">
+                <div class="card-title">Grading Configuration</div>
+
+                <div class="grading-section" style="background: none; border: none; padding: 0;">
+                    <div class="grading-row">
+                        <div class="form-group">
+                            <label for="default_points">Default Points per Concept</label>
+                            <input type="number" id="default_points" name="default_points" value="10" min="1" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="passing_threshold">Passing Threshold (%)</label>
+                            <input type="number" id="passing_threshold" name="passing_threshold" value="70" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="concept-points-list">
+                        <h4>Point Values by Concept:</h4>
+                        <div id="conceptPointsContainer">
+                            <div class="no-concepts-msg">Enter key concepts above to assign point values</div>
+                        </div>
+                        <div class="total-points-display">
+                            <span>Total Points Available:</span>
+                            <span class="total-value" id="totalPointsDisplay">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario Structure Options -->
+                <div class="structure-options">
+                    <h4 style="color: var(--primary); margin-bottom: 16px; font-size: 1rem;">Scenario Structure</h4>
+                    <div class="structure-row">
+                        <div class="form-group">
+                            <label for="decision_nodes">
+                                Decision Nodes
+                                <span class="hint">Number of decision points per concept</span>
+                            </label>
+                            <select id="decision_nodes" name="decision_nodes">
+                                <option value="3">3 Decision Nodes</option>
+                                <option value="4" selected>4 Decision Nodes</option>
+                                <option value="5">5 Decision Nodes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="branches_per_node">
+                                Branches per Node
+                                <span class="hint">Choices available at each decision</span>
+                            </label>
+                            <select id="branches_per_node" name="branches_per_node">
+                                <option value="2">2 Branches</option>
+                                <option value="3" selected>3 Branches</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Study Upload Card (shown when Case Study Mode is ON) -->
+            <div class="card case-study-card" id="caseStudySection">
+                <div class="card-title" style="border-bottom-color: var(--primary);">📋 Upload Case Study <span class="required-badge" style="margin-left: 12px;">Required</span></div>
+                <p class="section-desc" style="margin-bottom: 20px; color: var(--gray-700);">
+                    This case study becomes the foundation of your scenario. The AI will transform the case into an
+                    immersive experience where students live through the situation and make critical decisions.
+                </p>
+
+                <div class="source-tabs" id="caseStudyTabs">
+                    <button type="button" class="source-tab active" data-tab="caseText">Paste Text</button>
+                    <button type="button" class="source-tab" data-tab="caseFile">Upload File</button>
+                </div>
+
+                <div class="source-input-area active" id="caseTextInputArea">
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="caseStudyTitle">Case Study Title</label>
+                        <input type="text" id="caseStudyTitle" placeholder="e.g., Patient X: Acute Respiratory Distress">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="caseStudyContent">Case Study Content</label>
+                        <textarea id="caseStudyContent" class="content-textarea"
+                                  placeholder="Paste your case study here. Include all relevant details, background, patient/client information, context, and any data points students should consider..."></textarea>
+                    </div>
+                </div>
+
+                <div class="source-input-area" id="caseFileInputArea">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Upload Case Study File (PDF, TXT, DOCX, MD)</label>
+                        <input type="file" id="caseStudyFileInput" accept=".pdf,.txt,.md,.docx" style="padding: 10px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Materials Card -->
+            <div class="card" id="courseMaterialsCard">
+                <div class="card-title" id="courseMaterialsTitle">📚 Course Materials</div>
+                <div class="content-sources-section" style="background: none; border: none; padding: 0; margin: 0;">
+                    <p id="courseMaterialsDesc" style="color: var(--gray-700); margin-bottom: 20px;">
+                        Upload course materials that contain the concepts and information students should apply. The AI will create scenarios in your chosen theme that test understanding of these materials. If Case Study Mode is selected, upload or paste your case study here.
+                    </p>
+
+                    <div class="source-tabs" id="contentSourceTabs">
+                        <button type="button" class="source-tab active" data-tab="text">Paste Text</button>
+                        <button type="button" class="source-tab" data-tab="url">URL</button>
+                        <button type="button" class="source-tab" data-tab="file">Upload File</button>
+                    </div>
+
+                    <div class="source-input-area active" id="textInputArea">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="textSourceTitle">Source Title</label>
+                            <input type="text" id="textSourceTitle" placeholder="e.g., Chapter 5: Diagnostic Methods">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="textSourceContent">Content</label>
+                            <textarea id="textSourceContent" class="content-textarea"
+                                      placeholder="Paste the text content from your reading materials here..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="source-input-area" id="urlInputArea">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="urlSourceTitle">Source Title</label>
+                            <input type="text" id="urlSourceTitle" placeholder="e.g., WHO Guidelines on Treatment">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="urlSourceUrl">URL</label>
+                            <input type="url" id="urlSourceUrl" placeholder="https://example.com/article">
+                        </div>
+                    </div>
+
+                    <div class="source-input-area" id="fileInputArea">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Upload File (PDF, TXT, DOCX, MD)</label>
+                            <input type="file" id="fileSourceInput" accept=".pdf,.txt,.md,.docx" style="padding: 10px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generation Card -->
+            <div class="card">
+                <div class="card-title">Generate Scenario</div>
+
+                <div class="generation-info">
+                    <h4>What will be generated:</h4>
+                    <ul>
+                        <li>Immersive narrative with student as the protagonist</li>
+                        <li>Deep branching with multiple decision chains per concept</li>
+                        <li>Scenario built directly on your case study/source material</li>
+                        <li>Meaningful consequences that create cause-and-effect learning</li>
+                        <li>Theme deeply integrated throughout all interactions</li>
+                        <li>Real-time scoring and detailed final results</li>
+                        <li>Standalone HTML file that works offline</li>
+                    </ul>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="previewBtn">Preview</button>
+                    <button type="submit" class="btn btn-primary" id="generateBtn">Generate & Download</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card preview-section" id="previewSection">
+            <h3>Preview</h3>
+            <iframe class="preview-frame" id="previewFrame"></iframe>
+        </div>
+
+        <footer>
+            EdQuest Interactive Scenario Generator - Powered by Claude AI
+            <div style="margin-top: 8px; font-size: 0.75rem; opacity: 0.8;">Patent Pending - Dr. Jessica Hirshorn</div>
+        </footer>
+    </div>
+
+    <script>
+        // State
+        let conceptPoints = {};
+        let caseStudyData = null;
+        let courseMaterialFileData = null;
+
+        // DOM Elements
+        const form = document.getElementById('scenarioForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const errorAlert = document.getElementById('errorAlert');
+        const successAlert = document.getElementById('successAlert');
+        const previewSection = document.getElementById('previewSection');
+        const previewFrame = document.getElementById('previewFrame');
+        const keyConceptsTextarea = document.getElementById('key_concepts');
+        const conceptPointsContainer = document.getElementById('conceptPointsContainer');
+        const defaultPointsInput = document.getElementById('default_points');
+        const totalPointsDisplay = document.getElementById('totalPointsDisplay');
+        const themePreset = document.getElementById('themePreset');
+        const themeInput = document.getElementById('theme');
+        const customThemeContainer = document.getElementById('customThemeContainer');
+        const caseStudyModeCheckbox = document.getElementById('caseStudyMode');
+        const caseStudySection = document.getElementById('caseStudySection');
+        const courseMaterialsTitle = document.getElementById('courseMaterialsTitle');
+        const courseMaterialsDesc = document.getElementById('courseMaterialsDesc');
+
+        // Case Study Mode handling
+        caseStudyModeCheckbox.addEventListener('change', () => {
+            const isActive = caseStudyModeCheckbox.checked;
+            if (isActive) {
+                caseStudySection.classList.add('visible');
+                courseMaterialsTitle.textContent = '📚 Course Materials (Optional)';
+                courseMaterialsDesc.textContent = 'Upload supplementary course materials (optional). The scenario will be based on the case study above, with these materials providing additional context.';
+            } else {
+                caseStudySection.classList.remove('visible');
+                courseMaterialsTitle.textContent = '📚 Course Materials';
+                courseMaterialsDesc.textContent = 'Upload course materials that contain the concepts and information students should apply. The AI will create scenarios in your chosen theme that test understanding of these materials. If Case Study Mode is selected, upload or paste your case study here.';
+                // Clear case study data when mode is disabled
+                caseStudyData = null;
+                document.getElementById('caseStudyTitle').value = '';
+                document.getElementById('caseStudyContent').value = '';
+                document.getElementById('caseStudyFileInput').value = '';
+            }
+        });
+
+        // Case Study tab switching
+        document.querySelectorAll('#caseStudyTabs .source-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#caseStudyTabs .source-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('#caseStudySection .source-input-area').forEach(a => a.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'InputArea').classList.add('active');
+            });
+        });
+
+        // Theme preset handling
+        themePreset.addEventListener('change', () => {
+            const value = themePreset.value;
+            if (value === 'custom') {
+                customThemeContainer.classList.add('visible');
+                themeInput.value = '';
+                themeInput.focus();
+            } else if (value) {
+                customThemeContainer.classList.add('visible');
+                themeInput.value = value;
+            } else {
+                customThemeContainer.classList.remove('visible');
+                themeInput.value = '';
+            }
+        });
+
+        // Content Sources tab switching
+        document.querySelectorAll('#contentSourceTabs .source-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('#contentSourceTabs .source-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-sources-section > .source-input-area').forEach(a => a.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'InputArea').classList.add('active');
+            });
+        });
+
+        // Concept points management
+        function updateConceptPointsList() {
+            const concepts = keyConceptsTextarea.value.split('\n').map(l => l.trim()).filter(l => l);
+            const defaultPts = parseInt(defaultPointsInput.value) || 10;
+
+            if (concepts.length === 0) {
+                conceptPointsContainer.innerHTML = '<div class="no-concepts-msg">Enter key concepts above to assign point values</div>';
+                totalPointsDisplay.textContent = '0';
+                conceptPoints = {};
+                return;
+            }
+
+            const newConceptPoints = {};
+            concepts.forEach(c => { newConceptPoints[c] = conceptPoints[c] || defaultPts; });
+            conceptPoints = newConceptPoints;
+
+            let html = '';
+            concepts.forEach(concept => {
+                html += `
+                    <div class="concept-point-item">
+                        <span class="concept-name">${escapeHtml(concept)}</span>
+                        <input type="number" class="concept-points-input" data-concept="${escapeHtml(concept)}"
+                               value="${conceptPoints[concept]}" min="1" max="100">
+                        <span style="color: var(--gray-500); font-size: 0.85rem;">pts</span>
+                    </div>
+                `;
+            });
+            conceptPointsContainer.innerHTML = html;
+
+            conceptPointsContainer.querySelectorAll('.concept-points-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    conceptPoints[e.target.dataset.concept] = parseInt(e.target.value) || 10;
+                    updateTotalPoints();
+                });
+            });
+            updateTotalPoints();
+        }
+
+        function updateTotalPoints() {
+            const total = Object.values(conceptPoints).reduce((sum, pts) => sum + pts, 0);
+            totalPointsDisplay.textContent = total;
+        }
+
+        function getConceptsWithPoints() {
+            return keyConceptsTextarea.value.split('\n').map(l => l.trim()).filter(l => l)
+                .map(c => ({ name: c, points: conceptPoints[c] || parseInt(defaultPointsInput.value) || 10 }));
+        }
+
+        keyConceptsTextarea.addEventListener('input', debounce(updateConceptPointsList, 300));
+        defaultPointsInput.addEventListener('change', updateConceptPointsList);
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.add('visible');
+            successAlert.classList.remove('visible');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => errorAlert.classList.remove('visible'), 5000);
+        }
+
+        function showSuccess(message) {
+            successAlert.textContent = message;
+            successAlert.classList.add('visible');
+            errorAlert.classList.remove('visible');
+            setTimeout(() => successAlert.classList.remove('visible'), 5000);
+        }
+
+        function setLoading(button, loading) {
+            if (loading) {
+                button.disabled = true;
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = '<span class="loading"></span>Generating...';
+            } else {
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText;
+            }
+        }
+
+        function getCaseStudyData() {
+            if (!caseStudyModeCheckbox.checked) return null;
+
+            const title = document.getElementById('caseStudyTitle').value.trim();
+            const content = document.getElementById('caseStudyContent').value.trim();
+            const fileInput = document.getElementById('caseStudyFileInput');
+
+            // Check if file was uploaded
+            if (fileInput.files.length > 0 && caseStudyData && caseStudyData.type === 'file') {
+                return caseStudyData;
+            }
+
+            // Check for pasted text
+            if (content) {
+                return {
+                    type: 'text',
+                    title: title || 'Case Study',
+                    content: content
+                };
+            }
+
+            return null;
+        }
+
+        // Handle case study file upload
+        document.getElementById('caseStudyFileInput').addEventListener('change', (e) => {
+            const fileInput = e.target;
+            if (!fileInput.files.length) return;
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                caseStudyData = {
+                    type: 'file',
+                    title: file.name,
+                    filename: file.name,
+                    content: e.target.result
+                };
+                showSuccess('Case study file loaded: ' + file.name);
+            };
+            reader.readAsText(file);
+        });
+
+        // Handle course material file upload
+        document.getElementById('fileSourceInput').addEventListener('change', (e) => {
+            const fileInput = e.target;
+            if (!fileInput.files.length) {
+                courseMaterialFileData = null;
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                courseMaterialFileData = {
+                    type: 'file',
+                    title: file.name,
+                    filename: file.name,
+                    content: e.target.result
+                };
+                showSuccess('Course material file loaded: ' + file.name);
+            };
+            reader.readAsText(file);
+        });
+
+        // Get course materials from the active form tab
+        function getCourseMaterialsData() {
+            const textContent = document.getElementById('textSourceContent').value.trim();
+            const textTitle = document.getElementById('textSourceTitle').value.trim();
+            const urlValue = document.getElementById('urlSourceUrl').value.trim();
+            const urlTitle = document.getElementById('urlSourceTitle').value.trim();
+            const fileInput = document.getElementById('fileSourceInput');
+
+            const sources = [];
+
+            // Check for pasted text
+            if (textContent) {
+                sources.push({
+                    type: 'text',
+                    title: textTitle || 'Course Material',
+                    content: textContent
+                });
+            }
+
+            // Check for URL
+            if (urlValue) {
+                sources.push({
+                    type: 'url',
+                    title: urlTitle || urlValue,
+                    url: urlValue
+                });
+            }
+
+            // Check for uploaded file
+            if (courseMaterialFileData) {
+                sources.push(courseMaterialFileData);
+            }
+
+            return sources;
+        }
+
+        function validateForm() {
+            const isCaseStudyMode = caseStudyModeCheckbox.checked;
+
+            // In case study mode, require case study
+            if (isCaseStudyMode) {
+                const caseStudy = getCaseStudyData();
+                if (!caseStudy) {
+                    showError('Please upload or paste your case study content');
+                    return false;
+                }
+            } else {
+                // In regular mode, require course materials
+                const materials = getCourseMaterialsData();
+                if (materials.length === 0) {
+                    showError('Please add course materials (paste text, enter a URL, or upload a file)');
+                    return false;
+                }
+            }
+
+            const theme = themeInput.value.trim();
+            if (!theme) {
+                showError('Please select or enter a scenario theme');
+                return false;
+            }
+            if (!keyConceptsTextarea.value.trim()) {
+                showError('Please enter at least one key concept');
+                return false;
+            }
+            return true;
+        }
+
+        function getFormData() {
+            const data = {
+                theme: themeInput.value.trim(),
+                learning_objectives: document.getElementById('learning_objectives').value
+                    .split('\n').map(l => l.trim()).filter(l => l),
+                key_concepts: getConceptsWithPoints(),
+                passing_threshold: parseInt(document.getElementById('passing_threshold').value) || 70,
+                default_points: parseInt(defaultPointsInput.value) || 10,
+                content_sources: getCourseMaterialsData(),
+                decision_nodes: parseInt(document.getElementById('decision_nodes').value) || 4,
+                branches_per_node: parseInt(document.getElementById('branches_per_node').value) || 3,
+                case_study_mode: caseStudyModeCheckbox.checked
+            };
+
+            // Add case study if in case study mode
+            if (caseStudyModeCheckbox.checked) {
+                data.case_study = getCaseStudyData();
+            }
+
+            return data;
+        }
+
+        // Form submission - Generate & Download (opens in new window AND downloads)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            setLoading(generateBtn, true);
+            errorAlert.classList.remove('visible');
+
+            try {
+                const data = getFormData();
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Generation failed');
+                }
+
+                // Get the HTML blob
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                // Get filename from response headers
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = 'edquest_scenario.html';
+                if (disposition) {
+                    const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (match && match[1]) {
+                        filename = match[1].replace(/['"]/g, '');
+                    }
+                }
+
+                // Open in new window for immediate preview
+                const previewWindow = window.open(url, '_blank');
+
+                // Also trigger download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                // Cleanup blob URL after delay
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                }, 5000);
+
+                showSuccess('Scenario generated! Opening in new tab and downloading...');
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(generateBtn, false);
+            }
+        });
+
+        // Preview button
+        previewBtn.addEventListener('click', async () => {
+            if (!validateForm()) return;
+
+            setLoading(previewBtn, true);
+            errorAlert.classList.remove('visible');
+
+            try {
+                const data = getFormData();
+                const response = await fetch('/api/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Preview failed');
+                }
+
+                const result = await response.json();
+                previewSection.classList.add('visible');
+                previewFrame.srcdoc = result.html;
+                previewSection.scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(previewBtn, false);
+            }
+        });
+
+        // Initialize
+        updateConceptPointsList();
+    </script>
+</body>
+</html>

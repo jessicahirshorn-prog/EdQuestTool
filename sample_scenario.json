@@ -1,0 +1,18 @@
+{
+    "theme": "Scientific Method in Research",
+    "learning_objectives": [
+        "Identify the steps of the scientific method",
+        "Formulate testable hypotheses from observations",
+        "Design controlled experiments with appropriate variables",
+        "Analyze data and draw evidence-based conclusions"
+    ],
+    "key_concepts": [
+        {"name": "Observation and Question Formation", "points": 15},
+        {"name": "Hypothesis Development", "points": 20},
+        {"name": "Experimental Design and Variables", "points": 25},
+        {"name": "Data Analysis and Conclusion", "points": 40}
+    ],
+    "assessment_criteria": "Students should demonstrate the ability to apply each step of the scientific method to a novel research scenario, making choices that reflect systematic, evidence-based reasoning rather than assumptions or shortcuts.",
+    "passing_threshold": 70,
+    "default_points": 10
+}
