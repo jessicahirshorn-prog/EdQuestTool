@@ -7,13 +7,22 @@ import os
 import sys
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 import json
-import tempfile
 import requests
-from flask import Flask, request, jsonify, send_file, Response
-from twine_generator import EducationalContent, generate_educational_scenario, ANTHROPIC_AVAILABLE
+from flask import Flask, request, jsonify, Response
+
+# Try to import twine_generator, with fallback
+try:
+    from twine_generator import EducationalContent, generate_educational_scenario, ANTHROPIC_AVAILABLE
+    GENERATOR_AVAILABLE = True
+except ImportError as e:
+    GENERATOR_AVAILABLE = False
+    ANTHROPIC_AVAILABLE = False
+    IMPORT_ERROR = str(e)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
@@ -24,6 +33,11 @@ ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 def check_api_key():
     """Check if API key is configured and return status info."""
+    if not GENERATOR_AVAILABLE:
+        return {
+            'configured': False,
+            'message': f'Generator module not available: {IMPORT_ERROR}'
+        }
     if not ANTHROPIC_API_KEY:
         return {
             'configured': False,
@@ -122,6 +136,9 @@ def api_status():
 def generate_scenario():
     """Generate a Twine scenario from JSON input."""
     try:
+        if not GENERATOR_AVAILABLE:
+            return jsonify({'error': f'Generator not available: {IMPORT_ERROR}'}), 500
+
         data = request.get_json()
 
         if not data:
@@ -206,6 +223,9 @@ def generate_scenario():
 def preview_scenario():
     """Generate and return HTML content for preview."""
     try:
+        if not GENERATOR_AVAILABLE:
+            return jsonify({'error': f'Generator not available: {IMPORT_ERROR}'}), 500
+
         data = request.get_json()
 
         if not data:
