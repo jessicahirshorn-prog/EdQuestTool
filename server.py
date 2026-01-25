@@ -9,7 +9,11 @@ import json
 import tempfile
 import requests
 from flask import Flask, request, jsonify, send_file, send_from_directory
+from dotenv import load_dotenv
 from twine_generator import EducationalContent, generate_educational_scenario, ANTHROPIC_AVAILABLE
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__, static_folder='static')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
@@ -133,6 +137,16 @@ def generate_scenario():
     try:
         data = request.get_json()
 
+        # DEBUG: Log incoming request data
+        print("\n" + "="*60)
+        print("DEBUG: /api/generate request received")
+        print("="*60)
+        print(f"Theme: {data.get('theme', 'N/A')}")
+        print(f"Custom Scenario Description: {data.get('custom_scenario_description', 'NOT PROVIDED')[:200] if data.get('custom_scenario_description') else 'NOT PROVIDED'}")
+        print(f"Case Study Mode: {data.get('case_study_mode', False)}")
+        print(f"Content Sources Count: {len(data.get('content_sources', []))}")
+        print("="*60 + "\n")
+
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
@@ -151,6 +165,9 @@ def generate_scenario():
         # Case study mode
         case_study_mode = data.get('case_study_mode', False)
         case_study = data.get('case_study', None)
+
+        # Custom scenario description (for custom themes)
+        custom_scenario_description = data.get('custom_scenario_description', '')
 
         # Validation
         if not theme:
@@ -190,7 +207,8 @@ def generate_scenario():
                 decision_nodes=decision_nodes,
                 branches_per_node=branches_per_node,
                 case_study_mode=case_study_mode,
-                case_study=case_study
+                case_study=case_study,
+                custom_scenario_description=custom_scenario_description
             )
         except Exception as gen_error:
             # If AI generation fails, it will fall back to template
@@ -249,6 +267,7 @@ def preview_scenario():
         branches_per_node = data.get('branches_per_node', 3)
         case_study_mode = data.get('case_study_mode', False)
         case_study = data.get('case_study', None)
+        custom_scenario_description = data.get('custom_scenario_description', '')
 
         # Validation
         if not all([theme, learning_objectives, key_concepts]):
@@ -284,7 +303,8 @@ def preview_scenario():
                 decision_nodes=decision_nodes,
                 branches_per_node=branches_per_node,
                 case_study_mode=case_study_mode,
-                case_study=case_study
+                case_study=case_study,
+                custom_scenario_description=custom_scenario_description
             )
         except Exception as gen_error:
             print(f"Generation error (using fallback): {gen_error}")
@@ -303,6 +323,10 @@ def preview_scenario():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
+# For Vercel serverless deployment
+# The 'app' variable is the WSGI application that Vercel will use
+# No additional configuration needed - Vercel will automatically detect it
 
 if __name__ == '__main__':
     print("=" * 60)
