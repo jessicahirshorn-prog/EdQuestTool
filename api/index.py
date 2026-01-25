@@ -304,7 +304,5 @@ def preview_scenario():
         return jsonify({'error': str(e)}), 500
 
 
-# Vercel handler
-def handler(request):
-    """Vercel serverless function handler."""
-    return app(request)
+# Vercel Python runtime automatically detects and uses the Flask 'app' variable
+# No custom handler needed - just export 'app' at module level
