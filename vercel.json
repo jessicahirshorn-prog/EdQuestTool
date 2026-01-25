@@ -6,6 +6,7 @@
     { "src": "api/index.py", "use": "@vercel/python" }
   ],
   "routes": [
+    { "src": "/api/test", "dest": "/api/index.py" },
     { "src": "/api/status", "dest": "/api/index.py" },
     { "src": "/api/generate", "dest": "/api/index.py" },
     { "src": "/api/preview", "dest": "/api/index.py" },

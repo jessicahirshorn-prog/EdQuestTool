@@ -125,6 +125,16 @@ def process_content_sources(sources):
     return '\n\n'.join(all_content)
 
 
+@app.route('/api/test', methods=['GET'])
+def api_test():
+    """Simple test endpoint to verify API is working."""
+    return jsonify({
+        'status': 'ok',
+        'generator_available': GENERATOR_AVAILABLE,
+        'import_error': IMPORT_ERROR if not GENERATOR_AVAILABLE else None
+    })
+
+
 @app.route('/api/status', methods=['GET'])
 def api_status():
     """Return API status including AI availability."""
