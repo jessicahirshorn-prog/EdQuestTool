@@ -27,8 +27,10 @@ except ImportError as e:
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
-# Get API key from environment
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+
+def get_api_key():
+    """Get API key at request time, not module load time."""
+    return os.environ.get('ANTHROPIC_API_KEY')
 
 
 def check_api_key():
@@ -38,7 +40,8 @@ def check_api_key():
             'configured': False,
             'message': f'Generator module not available: {IMPORT_ERROR}'
         }
-    if not ANTHROPIC_API_KEY:
+    api_key = get_api_key()
+    if not api_key:
         return {
             'configured': False,
             'message': 'ANTHROPIC_API_KEY environment variable not set. AI generation disabled.'
@@ -128,9 +131,13 @@ def process_content_sources(sources):
 @app.route('/api/test', methods=['GET'])
 def api_test():
     """Simple test endpoint to verify API is working."""
+    api_key = get_api_key()
     return jsonify({
         'status': 'ok',
         'generator_available': GENERATOR_AVAILABLE,
+        'anthropic_available': ANTHROPIC_AVAILABLE,
+        'api_key_set': bool(api_key),
+        'api_key_length': len(api_key) if api_key else 0,
         'import_error': IMPORT_ERROR if not GENERATOR_AVAILABLE else None
     })
 
@@ -194,7 +201,7 @@ def generate_scenario():
             'source_content': source_content
         })
 
-        api_key = ANTHROPIC_API_KEY if ANTHROPIC_AVAILABLE else None
+        api_key = get_api_key() if ANTHROPIC_AVAILABLE else None
 
         try:
             story = generate_educational_scenario(
@@ -275,7 +282,7 @@ def preview_scenario():
             'source_content': source_content
         })
 
-        api_key = ANTHROPIC_API_KEY if ANTHROPIC_AVAILABLE else None
+        api_key = get_api_key() if ANTHROPIC_AVAILABLE else None
 
         try:
             story = generate_educational_scenario(
