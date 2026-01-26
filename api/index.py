@@ -161,7 +161,7 @@ def api_test_ai():
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
         message = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-sonnet-4-20250514",
             max_tokens=50,
             messages=[{"role": "user", "content": "Say 'Hello EdQuest!' and nothing else."}]
         )

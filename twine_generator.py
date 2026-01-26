@@ -1174,7 +1174,7 @@ All three sound professional. The "best" one depends on applying the specific co
 
     try:
         message = client.messages.create(
-            model="claude-3-5-sonnet-latest",
+            model="claude-sonnet-4-20250514",
             max_tokens=12000,
             messages=[
                 {"role": "user", "content": prompt}
