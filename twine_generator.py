@@ -13,6 +13,7 @@ import uuid
 import re
 import os
 import argparse
+import random
 from dataclasses import dataclass, field
 from typing import Optional
 from pathlib import Path
@@ -133,7 +134,7 @@ body {{
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #003366 0%, #004488 100%);
     min-height: 100vh;
 }}
 tw-story {{
@@ -162,21 +163,24 @@ tw-link {{
     display: block;
     padding: 16px 20px;
     margin: 8px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #003366 0%, #004488 100%);
+    color: #FFD700;
     text-decoration: none;
     border-radius: 8px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    font-weight: 500;
+    font-weight: 600;
     white-space: normal;
     word-wrap: break-word;
     overflow-wrap: break-word;
     line-height: 1.4;
+    border: 2px solid #FFD700;
 }}
 tw-link:hover {{
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    background: #FFD700;
+    color: #003366;
 }}
 /* Navigation buttons */
 .nav-buttons {{
@@ -211,7 +215,7 @@ tw-link:hover {{
 }}
 .scenario-context {{
     background: #f8f9fa;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #003366;
     padding: 16px;
     margin-bottom: 20px;
     border-radius: 0 8px 8px 0;
@@ -273,13 +277,13 @@ tw-link:hover {{
     border-radius: 0 8px 8px 0;
 }}
 .theme-atmosphere {{
-    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-    border-left: 4px solid #9333ea;
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+    border-left: 4px solid #FFD700;
     padding: 14px 16px;
     margin: 16px 0;
     border-radius: 0 8px 8px 0;
     font-style: italic;
-    color: #581c87;
+    color: #003366;
 }}
 .points-earned {{
     display: inline-block;
@@ -328,7 +332,7 @@ tw-link:hover {{
 .score-display .value {{
     font-size: 28px;
     font-weight: bold;
-    color: #667eea;
+    color: #003366;
 }}
 .results-box {{
     background: #f8f9fa;
@@ -367,11 +371,12 @@ tw-link:hover {{
 .concept-result.incorrect {{ border-left: 4px solid #dc3545; }}
 .concept-result.partial {{ border-left: 4px solid #f59e0b; }}
 .chapter-header {{
-    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
-    color: white;
+    background: linear-gradient(135deg, #003366 0%, #004488 100%);
+    color: #FFD700;
     padding: 16px 20px;
     margin: -32px -32px 24px -32px;
     border-radius: 16px 16px 0 0;
+    border-bottom: 3px solid #FFD700;
 }}
 .chapter-header h2 {{
     margin: 0;
@@ -453,16 +458,30 @@ HARLOWE_ENGINE = '''
     }
 
     function getConceptFromPassage(passageName) {
-        // Match patterns like "Correct 1", "Incorrect 2a", "Partial 1b"
-        const match = passageName.match(/(Correct|Incorrect|Partial)\\s+(\\d+)/);
-        if (match) {
-            const num = parseInt(match[2]);
+        // Match patterns like "C1Best", "C1Partial", "C1Poor0" (AI-generated scenarios)
+        const aiMatch = passageName.match(/^C(\\d+)(Best|Partial|Poor\\d*)$/);
+        if (aiMatch) {
+            const num = parseInt(aiMatch[1]);
+            const quality = aiMatch[2];
             const concepts = Object.keys(grading.config.conceptPoints || {});
             if (num <= concepts.length) {
                 return {
                     concept: concepts[num - 1],
-                    isCorrect: match[1] === 'Correct',
-                    isPartial: match[1] === 'Partial'
+                    isCorrect: quality === 'Best',
+                    isPartial: quality === 'Partial'
+                };
+            }
+        }
+        // Also match patterns like "Correct 1", "Incorrect 2a", "Partial 1b" (template scenarios)
+        const templateMatch = passageName.match(/(Correct|Incorrect|Partial)\\s+(\\d+)/);
+        if (templateMatch) {
+            const num = parseInt(templateMatch[2]);
+            const concepts = Object.keys(grading.config.conceptPoints || {});
+            if (num <= concepts.length) {
+                return {
+                    concept: concepts[num - 1],
+                    isCorrect: templateMatch[1] === 'Correct',
+                    isPartial: templateMatch[1] === 'Partial'
                 };
             }
         }
@@ -526,11 +545,19 @@ HARLOWE_ENGINE = '''
             content = content.replace(/\\{RESULTS_BOX\\}/g, generateResultsBox());
         }
 
-        content = content.split('\\n\\n').map(p => '<p>' + p.replace(/\\n/g, '<br>') + '</p>').join('');
+        // For Results page, content already has HTML structure - don't wrap in <p> tags
+        if (name !== 'Results') {
+            content = content.split('\\n\\n').map(p => '<p>' + p.replace(/\\n/g, '<br>') + '</p>').join('');
+        }
 
-        // Add navigation buttons (except on Start and Results)
+        // Add navigation buttons (except on Start)
         let navButtons = '';
-        if (name !== 'Start' && name !== 'Results') {
+        if (name === 'Results') {
+            // Special "Play Again" button for results page
+            navButtons = '<div class="nav-buttons" style="justify-content: center;">';
+            navButtons += '<button class="nav-btn" style="background: linear-gradient(135deg, #003366 0%, #004488 100%); color: #FFD700; padding: 14px 28px; font-size: 1.1rem; border: 2px solid #FFD700; font-weight: 600;" onclick="resetScenario()">Play Again</button>';
+            navButtons += '</div>';
+        } else if (name !== 'Start') {
             navButtons = '<div class="nav-buttons">';
             if (history.length > 1) {
                 navButtons += '<button class="nav-btn nav-btn-back" onclick="goBack()">Go Back</button>';
@@ -560,13 +587,67 @@ HARLOWE_ENGINE = '''
         const statusClass = passed ? 'passed' : 'failed';
         const statusText = passed ? 'PASSED' : 'NEEDS REVIEW';
 
+        // Collect concepts by performance
+        const masteredConcepts = [];
+        const partialConcepts = [];
+        const needsReviewConcepts = [];
+
         let conceptBreakdown = '';
         for (const [concept, result] of Object.entries(grading.conceptResults)) {
             let cls = result.correct ? 'correct' : (result.earned > 0 ? 'partial' : 'incorrect');
             let icon = result.correct ? '\\u2713' : (result.earned > 0 ? '~' : '\\u2717');
             let pts = result.earned > 0 ? '+' + result.earned : '0';
             conceptBreakdown += '<div class="concept-result ' + cls + '"><span>' + icon + ' ' + concept + '</span><span>' + pts + ' / ' + result.points + ' pts</span></div>';
+
+            if (result.correct) {
+                masteredConcepts.push(concept);
+            } else if (result.earned > 0) {
+                partialConcepts.push(concept);
+            } else {
+                needsReviewConcepts.push(concept);
+            }
         }
+
+        // Build detailed performance explanation
+        let performanceExplanation = '<div style="margin-top:20px; padding:16px; background:white; border-radius:8px;">';
+        performanceExplanation += '<h3 style="margin:0 0 12px 0; color:#003366; font-size:1.1rem;">Performance Analysis</h3>';
+
+        if (masteredConcepts.length > 0) {
+            performanceExplanation += '<div style="margin-bottom:12px;"><strong style="color:#059669;">Concepts Mastered:</strong> ';
+            performanceExplanation += 'You demonstrated strong understanding of <em>' + masteredConcepts.join('</em>, <em>') + '</em>. ';
+            performanceExplanation += 'Your decisions showed you can correctly apply ' + (masteredConcepts.length === 1 ? 'this concept' : 'these concepts') + ' in realistic scenarios.</div>';
+        }
+
+        if (partialConcepts.length > 0) {
+            performanceExplanation += '<div style="margin-bottom:12px;"><strong style="color:#d97706;">Partial Understanding:</strong> ';
+            performanceExplanation += 'You showed some understanding of <em>' + partialConcepts.join('</em>, <em>') + '</em>, but your approach was incomplete. ';
+            performanceExplanation += 'Review the nuances of ' + (partialConcepts.length === 1 ? 'this concept' : 'these concepts') + ' to strengthen your application skills.</div>';
+        }
+
+        if (needsReviewConcepts.length > 0) {
+            performanceExplanation += '<div style="margin-bottom:12px;"><strong style="color:#dc2626;">Needs Review:</strong> ';
+            performanceExplanation += 'The concepts of <em>' + needsReviewConcepts.join('</em>, <em>') + '</em> require additional study. ';
+            performanceExplanation += 'Focus on understanding how ' + (needsReviewConcepts.length === 1 ? 'this concept applies' : 'these concepts apply') + ' to real-world situations.</div>';
+        }
+
+        // Overall recommendation
+        if (passed) {
+            performanceExplanation += '<div style="margin-top:12px; padding:12px; background:#d1fae5; border-radius:6px; color:#065f46;">';
+            performanceExplanation += '<strong>Overall:</strong> You have demonstrated proficiency in applying these concepts. ';
+            if (partialConcepts.length > 0 || needsReviewConcepts.length > 0) {
+                performanceExplanation += 'To achieve mastery, continue practicing the areas noted above.';
+            } else {
+                performanceExplanation += 'Excellent work across all assessed areas!';
+            }
+            performanceExplanation += '</div>';
+        } else {
+            performanceExplanation += '<div style="margin-top:12px; padding:12px; background:#fee2e2; border-radius:6px; color:#991b1b;">';
+            performanceExplanation += '<strong>Recommendation:</strong> Review the source materials focusing on the concepts marked for review. ';
+            performanceExplanation += 'Pay attention to how these concepts are applied in practice, then try the scenario again.';
+            performanceExplanation += '</div>';
+        }
+
+        performanceExplanation += '</div>';
 
         return '<div class="results-box ' + statusClass + '">' +
             '<div class="results-score">' + percentage + '%</div>' +
@@ -574,11 +655,12 @@ HARLOWE_ENGINE = '''
             '<div><strong>Score:</strong> ' + grading.score + ' / ' + grading.config.totalPoints + ' points</div>' +
             '<div><strong>Required:</strong> ' + grading.config.passingThreshold + '%</div>' +
             '<div style="margin-top:16px"><strong>Concept Breakdown:</strong></div>' +
-            conceptBreakdown + '</div>';
+            conceptBreakdown +
+            performanceExplanation + '</div>';
     }
 
     function generateResultsContent() {
-        return '**Your Results**\\n\\n{RESULTS_BOX}';
+        return '<div class="chapter-header"><h2>Your Results</h2></div>' + generateResultsBox();
     }
 
     window.goBack = function() {
@@ -886,7 +968,8 @@ def get_theme_context(theme: str) -> dict:
 
 def generate_scenario_with_ai(content: EducationalContent, api_key: str,
                                decision_nodes: int = 4, branches_per_node: int = 3,
-                               case_study_mode: bool = False, case_study: dict = None) -> dict:
+                               case_study_mode: bool = False, case_study: dict = None,
+                               custom_scenario_description: str = None) -> dict:
     """
     Use Claude AI to generate an application-focused educational scenario
     with concise text and non-obvious choices that require critical thinking.
@@ -907,6 +990,22 @@ def generate_scenario_with_ai(content: EducationalContent, api_key: str,
     source_text = content.source_content
     if len(source_text) > 20000:
         source_text = source_text[:20000] + "\n\n[Content truncated...]"
+
+    # Prepare custom scenario description if provided
+    custom_scenario_section = ""
+    if custom_scenario_description:
+        custom_scenario_section = f"""
+## CUSTOM SCENARIO DESCRIPTION (PRIMARY SOURCE - BUILD SCENARIO AROUND THIS)
+
+{custom_scenario_description}
+
+CRITICAL: The scenario MUST be built around this custom description. Use the specific:
+- Setting, location, and environment described
+- Characters, roles, and relationships mentioned
+- Situation, context, and circumstances outlined
+- Any specific details the instructor provided
+The student should experience EXACTLY the scenario described above. Do NOT substitute generic elements.
+"""
 
     # Prepare case study content if provided
     case_study_section = ""
@@ -932,11 +1031,12 @@ The student should feel they are living INSIDE this case, making the real decisi
 
 ## CORE DESIGN PRINCIPLES
 
-### 1. CONCISE TEXT - NO FLUFF
-- Maximum 2-3 sentences per situation description
-- Get to the decision point QUICKLY
-- No flowery prose or unnecessary atmosphere
-- Every sentence should either present information needed for the decision OR advance to the next choice
+### 1. STRONG OPENING, THEN CONCISE DECISIONS
+- The INTRODUCTION should be 1-2 substantial paragraphs that immerse the student in the scenario
+- Set up WHO they are, WHERE they are, WHAT's happening, and WHY it matters
+- Create atmosphere and stakes in the introduction - make the student feel present in the situation
+- AFTER the introduction, decision points should be concise (2-3 sentences each)
+- Decision text should present the immediate situation and prompt action quickly
 
 ### 2. ALL CHOICES MUST SOUND REASONABLE
 THIS IS CRITICAL. Do NOT make correct answers obvious by:
@@ -967,7 +1067,7 @@ INSTEAD:
 - Setting: {theme_context['setting']}
 - Student Role: {theme_context['role']}
 - Stakes: {theme_context['stakes']}
-{case_study_section}
+{custom_scenario_section}{case_study_section}
 ## SUPPLEMENTARY MATERIALS
 {source_text if source_text else "(No additional materials provided)"}
 
@@ -991,15 +1091,15 @@ Return ONLY valid JSON:
 
 {{
   "introduction": {{
-    "situation": "1-2 sentences setting the scene",
-    "role": "Your role in one sentence",
-    "stakes": "What's at stake in one sentence"
+    "opening_narrative": "1-2 PARAGRAPHS (4-6 sentences) that immerse the student. Describe the setting vividly, establish their role, create atmosphere. Make them FEEL present in the situation before any decisions.",
+    "role": "Your specific role and responsibilities",
+    "stakes": "What's at stake and why it matters"
   }},
   "chapters": [
     {{
       "concept": "Concept name being tested",
       "title": "Brief chapter title",
-      "setup": "2-3 sentences establishing the situation",
+      "setup": "1-2 sentences transitioning to this chapter's situation",
       "decisions": [
         {{
           "situation": "1-2 sentences presenting the immediate situation",
@@ -1052,16 +1152,29 @@ GOOD (all sound reasonable):
 All three sound professional. The "best" one depends on applying the specific concept being tested.
 
 ## CRITICAL REMINDERS
-1. {decision_nodes} decisions per concept, {branches_per_node} choices each
-2. ALL choices must sound like reasonable professional options
-3. Maximum 2-3 sentences per situation - be CONCISE
-4. Test APPLICATION: "how would you apply X here?" not "what is X?"
-5. Choice text max 60 characters
-6. Return ONLY valid JSON"""
+1. INTRODUCTION: 1-2 paragraphs (4-6 sentences) - immersive, atmospheric, sets up the world
+2. DECISION POINTS: 2-3 sentences each - concise, action-oriented
+3. {decision_nodes} decisions per concept, {branches_per_node} choices each
+4. ALL choices must sound like reasonable professional options
+5. Test APPLICATION: "how would you apply X here?" not "what is X?"
+6. Choice text max 60 characters
+7. Return ONLY valid JSON"""
+
+    # DEBUG: Log the prompt being sent to Claude
+    print("\n" + "="*60)
+    print("DEBUG: Prompt being sent to Claude AI")
+    print("="*60)
+    print(f"Custom Scenario Section Present: {'Yes' if custom_scenario_section else 'No'}")
+    print(f"Case Study Section Present: {'Yes' if case_study_section else 'No'}")
+    if custom_scenario_section:
+        print("\n--- CUSTOM SCENARIO SECTION CONTENT ---")
+        print(custom_scenario_section[:500])
+        print("--- END PREVIEW ---\n")
+    print("="*60 + "\n")
 
     try:
         message = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-3-5-sonnet-latest",
             max_tokens=12000,
             messages=[
                 {"role": "user", "content": prompt}
@@ -1097,19 +1210,24 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
 
     story = TwineStory(title=f"EdQuest: {content.theme}", grading=grading_config)
 
-    # Introduction - keep it brief
+    # Introduction - immersive opening
     intro = scenario_data.get('introduction', {})
     concepts_text = "\n".join(f"- {c.name} ({c.points} pts)" for c in content.key_concepts)
+
+    # Use opening_narrative if available, fall back to situation for backwards compatibility
+    opening_text = intro.get('opening_narrative', intro.get('situation', 'You are about to face a series of professional decisions.'))
 
     intro_content = f"""<div class="chapter-header">
 <h2>{content.theme}</h2>
 </div>
 
-{intro.get('situation', 'You are about to face a series of professional decisions.')}
+{opening_text}
 
+<div class="scenario-context">
 **Your Role:** {intro.get('role', 'Decision-maker in this scenario')}
 
 **Stakes:** {intro.get('stakes', 'Your choices will be evaluated.')}
+</div>
 
 <div class="scenario-context">
 **Concepts assessed:**
@@ -1208,6 +1326,9 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
                 all_choices.append(('partial', partial_choice))
             for i, pc in enumerate(poor_choices):
                 all_choices.append((f'poor{i}', pc))
+
+            # Shuffle choices so correct answer isn't always in same position
+            random.shuffle(all_choices)
 
             # Build passage choices
             for quality_key, choice in all_choices:
@@ -1372,7 +1493,8 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
 
 def generate_educational_scenario(content: EducationalContent, api_key: str = None,
                                    decision_nodes: int = 4, branches_per_node: int = 3,
-                                   case_study_mode: bool = False, case_study: dict = None) -> TwineStory:
+                                   case_study_mode: bool = False, case_study: dict = None,
+                                   custom_scenario_description: str = None) -> TwineStory:
     """
     Generate an educational scenario, using AI if available.
     Falls back to template-based generation if AI is not available or fails.
@@ -1384,7 +1506,8 @@ def generate_educational_scenario(content: EducationalContent, api_key: str = No
                 decision_nodes=decision_nodes,
                 branches_per_node=branches_per_node,
                 case_study_mode=case_study_mode,
-                case_study=case_study
+                case_study=case_study,
+                custom_scenario_description=custom_scenario_description
             )
             return convert_ai_scenario_to_story(content, scenario_data)
         except Exception as e:
