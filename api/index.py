@@ -16,6 +16,7 @@ import requests
 from flask import Flask, request, jsonify, Response
 
 # Try to import twine_generator, with fallback
+IMPORT_ERROR = None
 try:
     from twine_generator import EducationalContent, generate_educational_scenario, ANTHROPIC_AVAILABLE
     GENERATOR_AVAILABLE = True
@@ -23,6 +24,9 @@ except ImportError as e:
     GENERATOR_AVAILABLE = False
     ANTHROPIC_AVAILABLE = False
     IMPORT_ERROR = str(e)
+
+# Debug: print import status
+print(f"[EdQuest] Generator available: {GENERATOR_AVAILABLE}, Anthropic available: {ANTHROPIC_AVAILABLE}")
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
@@ -201,7 +205,10 @@ def generate_scenario():
             'source_content': source_content
         })
 
-        api_key = get_api_key() if ANTHROPIC_AVAILABLE else None
+        api_key = get_api_key()
+
+        # Debug logging
+        print(f"[EdQuest Generate] API key set: {bool(api_key)}, Anthropic available: {ANTHROPIC_AVAILABLE}")
 
         try:
             story = generate_educational_scenario(
@@ -212,13 +219,17 @@ def generate_scenario():
                 case_study=case_study,
                 custom_scenario_description=custom_scenario_description
             )
+            print("[EdQuest Generate] Generation completed successfully")
         except Exception as gen_error:
-            print(f"Generation error (using fallback): {gen_error}")
+            print(f"[EdQuest Generate] AI generation failed: {type(gen_error).__name__}: {gen_error}")
+            import traceback
+            traceback.print_exc()
             story = generate_educational_scenario(
                 content, None,
                 decision_nodes=decision_nodes,
                 branches_per_node=branches_per_node
             )
+            print("[EdQuest Generate] Fallback to template completed")
 
         html_content = story.generate_html()
 
@@ -282,7 +293,10 @@ def preview_scenario():
             'source_content': source_content
         })
 
-        api_key = get_api_key() if ANTHROPIC_AVAILABLE else None
+        api_key = get_api_key()
+
+        # Debug logging
+        print(f"[EdQuest Preview] API key set: {bool(api_key)}, Anthropic available: {ANTHROPIC_AVAILABLE}")
 
         try:
             story = generate_educational_scenario(
@@ -293,8 +307,11 @@ def preview_scenario():
                 case_study=case_study,
                 custom_scenario_description=custom_scenario_description
             )
+            print("[EdQuest Preview] Generation completed successfully")
         except Exception as gen_error:
-            print(f"Generation error (using fallback): {gen_error}")
+            print(f"[EdQuest Preview] AI generation failed: {type(gen_error).__name__}: {gen_error}")
+            import traceback
+            traceback.print_exc()
             story = generate_educational_scenario(
                 content, None,
                 decision_nodes=decision_nodes,
