@@ -1,22 +1,20 @@
 {
   "version": 2,
+  "buildCommand": null,
+  "outputDirectory": null,
   "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    },
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    { "src": "/api/test", "dest": "/api/index.py" },
-    { "src": "/api/status", "dest": "/api/index.py" },
-    { "src": "/api/generate", "dest": "/api/index.py" },
-    { "src": "/api/preview", "dest": "/api/index.py" },
-    { "src": "/static/(.*)", "dest": "/public/static/$1" },
-    { "src": "/", "dest": "/public/index.html" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
+    { "handle": "filesystem" },
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
