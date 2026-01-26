@@ -146,6 +146,39 @@ def api_test():
     })
 
 
+@app.route('/api/test-ai', methods=['GET'])
+def api_test_ai():
+    """Test endpoint that actually calls Claude API."""
+    api_key = get_api_key()
+
+    if not api_key:
+        return jsonify({'error': 'No API key configured'}), 400
+
+    if not ANTHROPIC_AVAILABLE:
+        return jsonify({'error': 'Anthropic package not available'}), 400
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=50,
+            messages=[{"role": "user", "content": "Say 'Hello EdQuest!' and nothing else."}]
+        )
+        return jsonify({
+            'status': 'ok',
+            'response': message.content[0].text,
+            'model': message.model
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }), 500
+
+
 @app.route('/api/status', methods=['GET'])
 def api_status():
     """Return API status including AI availability."""

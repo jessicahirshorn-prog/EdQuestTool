@@ -1499,7 +1499,12 @@ def generate_educational_scenario(content: EducationalContent, api_key: str = No
     Generate an educational scenario, using AI if available.
     Falls back to template-based generation if AI is not available or fails.
     """
+    print(f"[EdQuest] generate_educational_scenario called")
+    print(f"[EdQuest] api_key provided: {bool(api_key)}, length: {len(api_key) if api_key else 0}")
+    print(f"[EdQuest] ANTHROPIC_AVAILABLE: {ANTHROPIC_AVAILABLE}")
+
     if api_key and ANTHROPIC_AVAILABLE:
+        print("[EdQuest] Attempting AI generation...")
         try:
             scenario_data = generate_scenario_with_ai(
                 content, api_key,
@@ -1509,9 +1514,15 @@ def generate_educational_scenario(content: EducationalContent, api_key: str = No
                 case_study=case_study,
                 custom_scenario_description=custom_scenario_description
             )
+            print("[EdQuest] AI generation successful!")
             return convert_ai_scenario_to_story(content, scenario_data)
         except Exception as e:
-            print(f"AI generation failed, falling back to template: {e}")
+            import traceback
+            print(f"[EdQuest] AI generation failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            print("[EdQuest] Falling back to template...")
+    else:
+        print(f"[EdQuest] Skipping AI - api_key: {bool(api_key)}, ANTHROPIC_AVAILABLE: {ANTHROPIC_AVAILABLE}")
 
     return generate_template_scenario(content, decision_nodes, branches_per_node)
 
