@@ -387,9 +387,98 @@ tw-link:hover {{
     opacity: 0.8;
     font-size: 0.85rem;
 }}
+/* Password Protection */
+.password-overlay {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #003366 0%, #004488 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}}
+.password-overlay.hidden {{
+    display: none;
+}}
+.password-box {{
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    border-top: 4px solid #FFD700;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}}
+.password-box h2 {{
+    color: #003366;
+    margin-bottom: 8px;
+    font-size: 1.5rem;
+}}
+.password-box p {{
+    color: #6b7280;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}}
+.password-box input[type="password"] {{
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 16px;
+    text-align: center;
+    box-sizing: border-box;
+}}
+.password-box input[type="password"]:focus {{
+    outline: none;
+    border-color: #FFD700;
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3);
+}}
+.password-box button {{
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #003366 0%, #004488 100%);
+    color: #FFD700;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}}
+.password-box button:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 51, 102, 0.4);
+}}
+.password-error {{
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin-top: 12px;
+    display: none;
+}}
+.password-error.show {{
+    display: block;
+}}
+.main-content.hidden {{
+    display: none;
+}}
 </style>
 </head>
 <body>
+<div class="password-overlay" id="passwordOverlay">
+    <div class="password-box">
+        <h2>EdQuest Scenario</h2>
+        <p>Please enter the password to continue</p>
+        <input type="password" id="passwordInput" placeholder="Enter password" autocomplete="off">
+        <button onclick="checkPassword()">Enter</button>
+        <div class="password-error" id="passwordError">Incorrect password. Please try again.</div>
+    </div>
+</div>
+<div class="main-content hidden" id="mainContent">
 <tw-storydata name="{html.escape(self.title)}" startnode="{start_node}" creator="EdQuest"
 creator-version="2.0.0" ifid="{self.ifid}" zoom="1" format="Harlowe" format-version="3.3.9"
 options="" tags="" hidden>
@@ -397,7 +486,35 @@ options="" tags="" hidden>
 <script role="script" id="twine-user-script" type="text/twine-javascript"></script>
 {passages_html}
 </tw-storydata>
+</div>
 <script>
+const SITE_PASSWORD = 'EdQuestBeta2026';
+
+function checkPassword() {{
+    const input = document.getElementById('passwordInput');
+    const error = document.getElementById('passwordError');
+    if (input.value === SITE_PASSWORD) {{
+        document.getElementById('passwordOverlay').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        sessionStorage.setItem('edquest_scenario_auth', 'true');
+    }} else {{
+        error.classList.add('show');
+        input.value = '';
+        input.focus();
+    }}
+}}
+
+if (sessionStorage.getItem('edquest_scenario_auth') === 'true') {{
+    document.getElementById('passwordOverlay').classList.add('hidden');
+    document.getElementById('mainContent').classList.remove('hidden');
+}}
+
+document.getElementById('passwordInput').addEventListener('keypress', function(e) {{
+    if (e.key === 'Enter') {{
+        checkPassword();
+    }}
+}});
+
 {grading_script}
 {HARLOWE_ENGINE}
 </script>
