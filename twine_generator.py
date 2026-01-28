@@ -457,34 +457,77 @@ HARLOWE_ENGINE = '''
         }
     }
 
-    function getConceptFromPassage(passageName) {
-        // Match patterns like "C1Best", "C1Partial", "C1Poor0" (AI-generated scenarios)
+    function getConceptFromPassage(passageName, passageTags) {
+        const concepts = Object.keys(grading.config.conceptPoints || {});
+        const tags = passageTags || [];
+
+        // NEW BRANCHING TREE: Check tags for concept and score info
+        // Tags format: ["correct", "concept-1", "score-100"] or ["partial", "concept-2", "score-50"]
+        let conceptNum = null;
+        let scorePercent = null;
+        let isCorrect = false;
+        let isPartial = false;
+
+        for (const tag of tags) {
+            if (tag.startsWith('concept-')) {
+                conceptNum = parseInt(tag.replace('concept-', ''));
+            } else if (tag.startsWith('score-')) {
+                scorePercent = parseInt(tag.replace('score-', ''));
+            } else if (tag === 'correct') {
+                isCorrect = true;
+            } else if (tag === 'partial') {
+                isPartial = true;
+            }
+        }
+
+        // If we found concept info from tags, use it
+        if (conceptNum !== null && conceptNum <= concepts.length) {
+            // For branching scenarios, use score percentage to determine points
+            if (scorePercent !== null) {
+                return {
+                    concept: concepts[conceptNum - 1],
+                    isCorrect: scorePercent >= 80,
+                    isPartial: scorePercent >= 40 && scorePercent < 80,
+                    scorePercent: scorePercent
+                };
+            }
+            return {
+                concept: concepts[conceptNum - 1],
+                isCorrect: isCorrect,
+                isPartial: isPartial,
+                scorePercent: isCorrect ? 100 : (isPartial ? 50 : 0)
+            };
+        }
+
+        // LEGACY: Match patterns like "C1Best", "C1Partial", "C1Poor0" (old AI-generated scenarios)
         const aiMatch = passageName.match(/^C(\\d+)(Best|Partial|Poor\\d*)$/);
         if (aiMatch) {
             const num = parseInt(aiMatch[1]);
             const quality = aiMatch[2];
-            const concepts = Object.keys(grading.config.conceptPoints || {});
             if (num <= concepts.length) {
                 return {
                     concept: concepts[num - 1],
                     isCorrect: quality === 'Best',
-                    isPartial: quality === 'Partial'
+                    isPartial: quality === 'Partial',
+                    scorePercent: quality === 'Best' ? 100 : (quality === 'Partial' ? 50 : 0)
                 };
             }
         }
-        // Also match patterns like "Correct 1", "Incorrect 2a", "Partial 1b" (template scenarios)
+
+        // LEGACY: Match patterns like "Correct 1", "Incorrect 2a", "Partial 1b" (template scenarios)
         const templateMatch = passageName.match(/(Correct|Incorrect|Partial)\\s+(\\d+)/);
         if (templateMatch) {
             const num = parseInt(templateMatch[2]);
-            const concepts = Object.keys(grading.config.conceptPoints || {});
             if (num <= concepts.length) {
                 return {
                     concept: concepts[num - 1],
                     isCorrect: templateMatch[1] === 'Correct',
-                    isPartial: templateMatch[1] === 'Partial'
+                    isPartial: templateMatch[1] === 'Partial',
+                    scorePercent: templateMatch[1] === 'Correct' ? 100 : (templateMatch[1] === 'Partial' ? 50 : 0)
                 };
             }
         }
+
         return null;
     }
 
@@ -503,12 +546,21 @@ HARLOWE_ENGINE = '''
         }
 
         if (grading.enabled) {
-            const conceptInfo = getConceptFromPassage(name);
+            // Pass passage tags to enable branching tree scoring
+            const conceptInfo = getConceptFromPassage(name, passage.tags);
             if (conceptInfo && grading.conceptResults[conceptInfo.concept]) {
                 const result = grading.conceptResults[conceptInfo.concept];
                 result.attempts++;
                 if (!result.answered) {
-                    if (conceptInfo.isCorrect) {
+                    // Use scorePercent for branching scenarios, fallback to binary correct/partial
+                    if (conceptInfo.scorePercent !== undefined && conceptInfo.scorePercent !== null) {
+                        // Calculate earned points based on score percentage
+                        result.earned = Math.floor(result.points * conceptInfo.scorePercent / 100);
+                        result.correct = conceptInfo.scorePercent >= 80;
+                        result.answered = true;
+                        grading.score += result.earned;
+                        updateScoreDisplay();
+                    } else if (conceptInfo.isCorrect) {
                         result.correct = true;
                         result.answered = true;
                         result.earned = result.points;
@@ -518,6 +570,11 @@ HARLOWE_ENGINE = '''
                         result.answered = true;
                         result.earned = Math.floor(result.points * 0.5);
                         grading.score += result.earned;
+                        updateScoreDisplay();
+                    } else {
+                        // Poor/incorrect ending - 0 points but mark as answered
+                        result.answered = true;
+                        result.earned = 0;
                         updateScoreDisplay();
                     }
                 }
@@ -1027,41 +1084,54 @@ CRITICAL: The scenario MUST be built around this case study. Use its specific:
 The student should feel they are living INSIDE this case, making the real decisions.
 """
 
-    prompt = f"""You are creating an APPLICATION-FOCUSED educational scenario. Students must APPLY concepts through realistic decisions, not just recognize correct answers.
+    # Calculate branching depth based on decision_nodes
+    # With true branching, we need a tree structure
+    # depth 1 = root decision, depth 2 = second level, etc.
+    branching_depth = min(decision_nodes, 3)  # Cap at 3 levels to keep content manageable
 
-## CORE DESIGN PRINCIPLES
+    prompt = f"""You are creating a TRUE BRANCHING NARRATIVE educational scenario. This is NOT a linear quiz - student choices must lead to GENUINELY DIFFERENT paths and outcomes.
 
-### 1. STRONG OPENING, THEN CONCISE DECISIONS
-- The INTRODUCTION should be 1-2 substantial paragraphs that immerse the student in the scenario
-- Set up WHO they are, WHERE they are, WHAT's happening, and WHY it matters
-- Create atmosphere and stakes in the introduction - make the student feel present in the situation
-- AFTER the introduction, decision points should be concise (2-3 sentences each)
-- Decision text should present the immediate situation and prompt action quickly
+## CRITICAL: TRUE BRANCHING STRUCTURE
+
+This scenario must be a BRANCHING TREE, not a linear sequence:
+- Each choice leads to a DIFFERENT situation (not the same next question)
+- Different paths have DIFFERENT events, challenges, and outcomes
+- Poor early choices should lead to increasingly difficult situations
+- Good early choices should open up better opportunities
+- The narrative should DIVERGE based on choices, not converge
+
+Example of WRONG (linear) structure:
+  Decision 1 → [all paths] → Decision 2 → [all paths] → Decision 3 → End
+
+Example of CORRECT (branching) structure:
+  Decision 1
+  ├── Choice A → Situation A → Decision 2A → [branches to different endings]
+  ├── Choice B → Situation B → Decision 2B → [branches to different endings]
+  └── Choice C → Situation C → Decision 2C → [branches to different endings]
+
+## DESIGN PRINCIPLES
+
+### 1. MEANINGFUL BRANCHING
+- Each choice should lead to a narratively DIFFERENT situation
+- If you choose to confront someone vs. avoid them, the next scene should be COMPLETELY DIFFERENT
+- Choices have CONSEQUENCES that shape the rest of the story
+- Students should feel their choices MATTER
 
 ### 2. ALL CHOICES MUST SOUND REASONABLE
-THIS IS CRITICAL. Do NOT make correct answers obvious by:
-- Making wrong answers sound extreme, lazy, or unprofessional
-- Using phrases like "ignore the problem" or "do nothing" for wrong choices
-- Making the correct answer the only one that sounds competent
-- Using obviously negative language for wrong choices
-
-INSTEAD:
-- Every choice should sound like something a reasonable professional might consider
-- Wrong choices should reflect common misconceptions or incomplete understanding
-- Choices differ in HOW they apply the concept, not WHETHER they're trying
+- Every choice should sound like something a thoughtful professional might consider
+- Wrong choices reflect common misconceptions, not obvious mistakes
 - A student who hasn't studied should find all options equally plausible
+- NO choices like "ignore the problem" or "do nothing"
 
-### 3. APPLICATION OVER RECOGNITION
-- Don't ask "which is the correct principle?" - that's recognition
-- DO ask "given this situation, what action best applies [concept]?"
-- Students must THINK about how the concept applies to THIS specific context
-- Choices should represent different APPROACHES to applying the concept
+### 3. CONSEQUENCES SNOWBALL
+- Early optimal choices → easier subsequent situations → better endings
+- Early poor choices → harder subsequent situations → worse endings
+- But EVERY path should be interesting and educational
 
-### 4. DECISION-HEAVY STRUCTURE
-- {decision_nodes} decision points per concept (not 2-3, but {decision_nodes})
-- {branches_per_node} choices at each decision point
-- Minimize reading, maximize choosing
-- Each decision should flow quickly to the next
+### 4. MULTIPLE ENDINGS
+- Each concept should have {branches_per_node} to {branches_per_node * 2} possible endings
+- Endings vary from "excellent application" (full points) to "needs review" (minimal points)
+- Each ending should explain what the student's path demonstrated
 
 ## Theme: {content.theme}
 - Setting: {theme_context['setting']}
@@ -1071,94 +1141,217 @@ INSTEAD:
 ## SUPPLEMENTARY MATERIALS
 {source_text if source_text else "(No additional materials provided)"}
 
-## Learning Objectives (students must APPLY these)
+## Learning Objectives
 {objectives_list}
 
 ## Key Concepts to Assess
 {concepts_list}
 
-## SCENARIO STRUCTURE
+## BRANCHING STRUCTURE REQUIREMENTS
 
-Create {len(content.key_concepts)} chapters, one per concept. Each chapter has:
-- Brief setup (2-3 sentences max)
-- {decision_nodes} connected decision points
-- {branches_per_node} choices per decision (all sounding reasonable)
-- Quick consequences leading to next decision
+Create {len(content.key_concepts)} chapters, one per concept. Each chapter is a BRANCHING TREE:
+- Depth: {branching_depth} levels of decisions
+- Branches: {branches_per_node} choices at each decision point
+- Each branch leads to a UNIQUE next situation
+- Multiple endings per chapter (ranging from optimal to poor outcomes)
 
-## JSON OUTPUT FORMAT
+## JSON OUTPUT FORMAT - BRANCHING TREE STRUCTURE
 
-Return ONLY valid JSON:
+Return ONLY valid JSON with this TREE structure:
 
 {{
   "introduction": {{
-    "opening_narrative": "1-2 PARAGRAPHS (4-6 sentences) that immerse the student. Describe the setting vividly, establish their role, create atmosphere. Make them FEEL present in the situation before any decisions.",
-    "role": "Your specific role and responsibilities",
-    "stakes": "What's at stake and why it matters"
+    "opening_narrative": "1-2 paragraphs immersing the student in the scenario. Vivid setting, clear role, atmospheric.",
+    "role": "Student's specific role",
+    "stakes": "What's at stake"
   }},
   "chapters": [
     {{
       "concept": "Concept name being tested",
-      "title": "Brief chapter title",
-      "setup": "1-2 sentences transitioning to this chapter's situation",
-      "decisions": [
-        {{
-          "situation": "1-2 sentences presenting the immediate situation",
-          "prompt": "What do you do? (or specific question)",
+      "title": "Chapter title",
+      "setup": "Brief transition to this chapter's situation",
+      "branch_tree": {{
+        "root": {{
+          "node_id": "root",
+          "situation": "2-3 sentences describing the situation the student faces",
           "choices": [
             {{
-              "text": "Professional-sounding action A (max 60 chars)",
-              "quality": "best",
-              "consequence": "Brief outcome (1 sentence)",
-              "feedback": "Why this was optimal - reference source material"
+              "text": "Action description (max 60 chars)",
+              "quality": "optimal",
+              "leads_to": "node_a",
+              "transition": "1-2 sentences describing immediate consequence and transition"
             }},
             {{
-              "text": "Professional-sounding action B (max 60 chars)",
-              "quality": "partial",
-              "consequence": "Brief outcome showing partial success",
-              "feedback": "What was missing in this approach"
+              "text": "Action description (max 60 chars)",
+              "quality": "adequate",
+              "leads_to": "node_b",
+              "transition": "1-2 sentences describing immediate consequence and transition"
             }},
             {{
-              "text": "Professional-sounding action C (max 60 chars)",
+              "text": "Action description (max 60 chars)",
               "quality": "poor",
-              "consequence": "Brief outcome showing problem",
-              "feedback": "Why this doesn't properly apply the concept"
+              "leads_to": "node_c",
+              "transition": "1-2 sentences describing immediate consequence and transition"
             }}
-          ],
-          "concept_application": "How this tests application of the concept"
+          ]
+        }},
+        "node_a": {{
+          "node_id": "node_a",
+          "situation": "NEW situation resulting from optimal choice - different from node_b and node_c",
+          "choices": [
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "optimal",
+              "leads_to": "ending_excellent",
+              "transition": "Consequence leading to ending"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "adequate",
+              "leads_to": "ending_good",
+              "transition": "Consequence leading to ending"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "poor",
+              "leads_to": "ending_mixed_a",
+              "transition": "Consequence leading to ending"
+            }}
+          ]
+        }},
+        "node_b": {{
+          "node_id": "node_b",
+          "situation": "DIFFERENT situation resulting from adequate choice",
+          "choices": [
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "optimal",
+              "leads_to": "ending_good",
+              "transition": "Consequence"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "adequate",
+              "leads_to": "ending_mixed_b",
+              "transition": "Consequence"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "poor",
+              "leads_to": "ending_poor",
+              "transition": "Consequence"
+            }}
+          ]
+        }},
+        "node_c": {{
+          "node_id": "node_c",
+          "situation": "DIFFICULT situation resulting from poor initial choice",
+          "choices": [
+            {{
+              "text": "Recovery action (max 60 chars)",
+              "quality": "optimal",
+              "leads_to": "ending_mixed_c",
+              "transition": "Partial recovery"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "adequate",
+              "leads_to": "ending_poor",
+              "transition": "Consequence"
+            }},
+            {{
+              "text": "Action (max 60 chars)",
+              "quality": "poor",
+              "leads_to": "ending_fail",
+              "transition": "Consequence"
+            }}
+          ]
+        }},
+        "ending_excellent": {{
+          "node_id": "ending_excellent",
+          "is_ending": true,
+          "score_percent": 100,
+          "title": "Excellent Outcome",
+          "narrative": "2-3 sentences describing the successful outcome",
+          "feedback": "Explanation of why this path demonstrated mastery of the concept",
+          "concept_demonstrated": "How the student showed understanding"
+        }},
+        "ending_good": {{
+          "node_id": "ending_good",
+          "is_ending": true,
+          "score_percent": 80,
+          "title": "Good Outcome",
+          "narrative": "Outcome description",
+          "feedback": "What went well and what could improve",
+          "concept_demonstrated": "Partial application shown"
+        }},
+        "ending_mixed_a": {{
+          "node_id": "ending_mixed_a",
+          "is_ending": true,
+          "score_percent": 60,
+          "title": "Mixed Results",
+          "narrative": "Outcome with some issues",
+          "feedback": "Analysis of the path taken",
+          "concept_demonstrated": "Gaps in application"
+        }},
+        "ending_mixed_b": {{
+          "node_id": "ending_mixed_b",
+          "is_ending": true,
+          "score_percent": 50,
+          "title": "Partial Success",
+          "narrative": "Outcome description",
+          "feedback": "What was missing",
+          "concept_demonstrated": "Limited demonstration"
+        }},
+        "ending_mixed_c": {{
+          "node_id": "ending_mixed_c",
+          "is_ending": true,
+          "score_percent": 40,
+          "title": "Recovery",
+          "narrative": "Recovered from poor start",
+          "feedback": "Good recovery but early mistake cost points",
+          "concept_demonstrated": "Eventually showed understanding"
+        }},
+        "ending_poor": {{
+          "node_id": "ending_poor",
+          "is_ending": true,
+          "score_percent": 25,
+          "title": "Needs Improvement",
+          "narrative": "Problematic outcome",
+          "feedback": "Key concepts were not properly applied",
+          "concept_demonstrated": "Review needed"
+        }},
+        "ending_fail": {{
+          "node_id": "ending_fail",
+          "is_ending": true,
+          "score_percent": 0,
+          "title": "Unsuccessful",
+          "narrative": "Poor outcome requiring review",
+          "feedback": "The approach taken did not apply the concept correctly",
+          "concept_demonstrated": "Concept review strongly recommended"
         }}
-      ],
-      "resolution": "One sentence wrapping up"
+      }}
     }}
   ],
   "conclusion": {{
-    "high_score": "Brief congratulations (1 sentence)",
-    "medium_score": "Brief encouragement (1 sentence)",
-    "low_score": "Brief redirect to review (1 sentence)"
+    "high_score": "Congratulations message",
+    "medium_score": "Encouragement message",
+    "low_score": "Review suggestion"
   }}
 }}
 
-## CHOICE QUALITY EXAMPLES
+## CRITICAL REQUIREMENTS
 
-BAD (obvious correct answer):
-- "Carefully review all documentation before proceeding" (obviously good)
-- "Skip the review and hope for the best" (obviously bad)
-- "Ignore standard protocols" (obviously bad)
+1. Each node_id must be UNIQUE within the chapter
+2. Every "leads_to" must reference an existing node_id
+3. Decision nodes have "choices" array; ending nodes have "is_ending": true
+4. Situations in different branches must be NARRATIVELY DIFFERENT
+5. All choice text must be professional-sounding (max 60 chars)
+6. Endings should range from 100% (excellent) to 0% (needs review)
+7. Create {branches_per_node * 2} to {branches_per_node * 3} unique endings per concept
+8. The tree must have {branching_depth} levels of decisions before reaching endings
 
-GOOD (all sound reasonable):
-- "Review the full documentation set before the meeting"
-- "Focus review on sections most relevant to today's agenda"
-- "Request a meeting postponement to allow thorough review"
-
-All three sound professional. The "best" one depends on applying the specific concept being tested.
-
-## CRITICAL REMINDERS
-1. INTRODUCTION: 1-2 paragraphs (4-6 sentences) - immersive, atmospheric, sets up the world
-2. DECISION POINTS: 2-3 sentences each - concise, action-oriented
-3. {decision_nodes} decisions per concept, {branches_per_node} choices each
-4. ALL choices must sound like reasonable professional options
-5. Test APPLICATION: "how would you apply X here?" not "what is X?"
-6. Choice text max 60 characters
-7. Return ONLY valid JSON"""
+Return ONLY valid JSON."""
 
     # DEBUG: Log the prompt being sent to Claude
     print("\n" + "="*60)
@@ -1198,7 +1391,11 @@ All three sound professional. The "best" one depends on applying the specific co
 
 
 def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dict) -> TwineStory:
-    """Convert AI-generated scenario data into a TwineStory object."""
+    """Convert AI-generated branching scenario data into a TwineStory object.
+
+    Handles the new branching tree structure where each choice leads to
+    genuinely different paths and outcomes.
+    """
 
     grading_config = GradingConfig(
         enabled=True,
@@ -1215,7 +1412,7 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
     concepts_text = "\n".join(f"- {c.name} ({c.points} pts)" for c in content.key_concepts)
 
     # Use opening_narrative if available, fall back to situation for backwards compatibility
-    opening_text = intro.get('opening_narrative', intro.get('situation', 'You are about to face a series of professional decisions.'))
+    opening_text = intro.get('opening_narrative', intro.get('situation', 'You are about to face a branching narrative.'))
 
     intro_content = f"""<div class="chapter-header">
 <h2>{content.theme}</h2>
@@ -1243,7 +1440,7 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
         position_y=100
     ))
 
-    # Generate passages for each chapter (concept)
+    # Generate passages for each chapter (concept) using BRANCHING TREE structure
     chapters = scenario_data.get('chapters', [])
     y_pos = 250
 
@@ -1274,141 +1471,242 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
         story.add_passage(Passage(
             name=f"Chapter {concept_num}",
             content=setup_content,
-            choices=[Choice("Continue", f"C{concept_num}D1")],
+            choices=[Choice("Continue", f"C{concept_num}_root")],
             position_y=y_pos
         ))
         y_pos += 120
 
-        # Process decisions
-        decisions = chapter.get('decisions', [])
-        num_decisions = len(decisions)
+        # Check if this chapter uses the new branching tree structure
+        branch_tree = chapter.get('branch_tree', None)
 
-        for dec_idx, decision in enumerate(decisions):
-            dec_num = dec_idx + 1
-            is_final_decision = (dec_idx == num_decisions - 1)
+        if branch_tree:
+            # NEW BRANCHING TREE STRUCTURE
+            # Process each node in the branch tree
+            for node_id, node in branch_tree.items():
+                passage_name = f"C{concept_num}_{node_id}"
 
-            situation = decision.get('situation', 'You must make a choice.')
-            prompt = decision.get('prompt', 'What do you do?')
+                if node.get('is_ending', False):
+                    # This is an ending node - award points based on score_percent
+                    score_percent = node.get('score_percent', 0)
+                    earned_points = int(points * score_percent / 100)
+                    title = node.get('title', 'Outcome')
+                    narrative = node.get('narrative', 'The scenario concludes.')
+                    feedback = node.get('feedback', '')
+                    concept_demo = node.get('concept_demonstrated', '')
 
-            # Decision passage - concise
-            decision_content = f"""{situation}
+                    # Determine feedback style based on score
+                    if score_percent >= 80:
+                        feedback_class = "feedback-correct"
+                        points_class = "points-earned"
+                        status = "Excellent!"
+                    elif score_percent >= 50:
+                        feedback_class = "feedback-partial"
+                        points_class = "points-partial"
+                        status = "Good effort."
+                    else:
+                        feedback_class = "feedback-incorrect"
+                        points_class = "points-missed"
+                        status = "Needs review."
+
+                    ending_content = f"""<div class="chapter-header">
+<h2>{title}</h2>
+</div>
+
+<div class="{feedback_class}">
+<strong>{status}</strong> <span class="{points_class}">+{earned_points} points ({score_percent}%)</span>
+</div>
+
+{narrative}
+
+<div class="source-reference"><strong>Assessment:</strong> {feedback}</div>
+<div class="source-reference"><strong>Concept Application:</strong> {concept_demo}</div>"""
+
+                    # Determine tags based on score for grading system
+                    if score_percent >= 80:
+                        tags = ["correct", f"concept-{concept_num}", f"score-{score_percent}"]
+                    elif score_percent >= 50:
+                        tags = ["partial", f"concept-{concept_num}", f"score-{score_percent}"]
+                    else:
+                        tags = ["incorrect", f"concept-{concept_num}", f"score-{score_percent}"]
+
+                    story.add_passage(Passage(
+                        name=passage_name,
+                        content=ending_content,
+                        choices=[Choice("Continue", next_chapter)],
+                        tags=tags,
+                        position_y=y_pos
+                    ))
+                    y_pos += 120
+
+                else:
+                    # This is a decision node - create choices that branch
+                    situation = node.get('situation', 'You face a decision.')
+                    choices_data = node.get('choices', [])
+
+                    decision_content = f"""{situation}
+
+<div class="decision-prompt">What do you do?</div>"""
+
+                    # Build passage choices - shuffle to randomize position
+                    passage_choices = []
+                    choices_list = list(choices_data)
+                    random.shuffle(choices_list)
+
+                    for choice in choices_list:
+                        choice_text = choice.get('text', 'Take action')[:60]
+                        leads_to = choice.get('leads_to', 'root')
+                        target = f"C{concept_num}_{leads_to}"
+                        transition = choice.get('transition', '')
+
+                        # Store transition text for display after choice
+                        passage_choices.append(Choice(choice_text, f"{target}_trans" if transition else target))
+
+                        # Create transition passage if there's transition text
+                        if transition:
+                            quality = choice.get('quality', 'adequate')
+                            if quality == 'optimal':
+                                trans_class = "feedback-correct"
+                            elif quality == 'adequate':
+                                trans_class = "feedback-partial"
+                            else:
+                                trans_class = "feedback-incorrect"
+
+                            story.add_passage(Passage(
+                                name=f"{target}_trans",
+                                content=f"""<div class="{trans_class}">{transition}</div>""",
+                                choices=[Choice("Continue", target)],
+                                position_y=y_pos
+                            ))
+                            y_pos += 60
+
+                    story.add_passage(Passage(
+                        name=passage_name,
+                        content=decision_content,
+                        choices=passage_choices,
+                        position_y=y_pos
+                    ))
+                    y_pos += 100
+
+        else:
+            # FALLBACK: Old linear structure for backwards compatibility
+            decisions = chapter.get('decisions', [])
+            num_decisions = len(decisions)
+
+            for dec_idx, decision in enumerate(decisions):
+                dec_num = dec_idx + 1
+                is_final_decision = (dec_idx == num_decisions - 1)
+
+                situation = decision.get('situation', 'You must make a choice.')
+                prompt = decision.get('prompt', 'What do you do?')
+
+                decision_content = f"""{situation}
 
 <div class="decision-prompt">{prompt}</div>"""
 
-            choices = decision.get('choices', [])
-            passage_choices = []
+                choices = decision.get('choices', [])
+                passage_choices = []
 
-            # Sort choices by quality
-            best_choice = None
-            partial_choice = None
-            poor_choices = []
+                best_choice = None
+                partial_choice = None
+                poor_choices = []
 
-            for choice in choices:
-                quality = choice.get('quality', 'poor')
-                if quality == 'best':
-                    best_choice = choice
-                elif quality == 'partial':
-                    partial_choice = choice
-                else:
-                    poor_choices.append(choice)
-
-            # Ensure we have at least one of each
-            if not best_choice and choices:
-                best_choice = choices[0]
-            if not poor_choices and len(choices) > 1:
-                poor_choices = choices[1:] if not partial_choice else choices[2:]
-
-            # Create randomized order for choices (so best isn't always first)
-            all_choices = []
-            if best_choice:
-                all_choices.append(('best', best_choice))
-            if partial_choice:
-                all_choices.append(('partial', partial_choice))
-            for i, pc in enumerate(poor_choices):
-                all_choices.append((f'poor{i}', pc))
-
-            # Shuffle choices so correct answer isn't always in same position
-            random.shuffle(all_choices)
-
-            # Build passage choices
-            for quality_key, choice in all_choices:
-                choice_text = choice.get('text', 'Take action')[:60]
-
-                if is_final_decision:
-                    # Final decision goes to outcome passages
-                    if quality_key == 'best':
-                        target = f"C{concept_num}Best"
-                    elif quality_key == 'partial':
-                        target = f"C{concept_num}Partial"
+                for choice in choices:
+                    quality = choice.get('quality', 'poor')
+                    if quality in ['best', 'optimal']:
+                        best_choice = choice
+                    elif quality in ['partial', 'adequate']:
+                        partial_choice = choice
                     else:
-                        target = f"C{concept_num}Poor{quality_key[-1] if quality_key[-1].isdigit() else '0'}"
-                else:
-                    # Intermediate decision - all paths continue
-                    if quality_key == 'best':
-                        target = f"C{concept_num}D{dec_num}Best"
-                    elif quality_key == 'partial':
-                        target = f"C{concept_num}D{dec_num}Partial"
-                    else:
-                        target = f"C{concept_num}D{dec_num}Poor"
+                        poor_choices.append(choice)
 
-                passage_choices.append(Choice(choice_text, target))
+                if not best_choice and choices:
+                    best_choice = choices[0]
+                if not poor_choices and len(choices) > 1:
+                    poor_choices = choices[1:] if not partial_choice else choices[2:]
 
-            story.add_passage(Passage(
-                name=f"C{concept_num}D{dec_num}",
-                content=decision_content,
-                choices=passage_choices,
-                position_y=y_pos
-            ))
-            y_pos += 100
-
-            # Create consequence passages
-            if not is_final_decision:
-                next_decision = f"C{concept_num}D{dec_num + 1}"
-
-                # Best path consequence
+                all_choices = []
                 if best_choice:
-                    consequence = best_choice.get('consequence', 'Good outcome.')
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}D{dec_num}Best",
-                        content=f"""<div class="feedback-correct">{consequence}</div>""",
-                        choices=[Choice("Continue", next_decision)],
-                        position_y=y_pos
-                    ))
-                    y_pos += 80
-
-                # Partial path
+                    all_choices.append(('best', best_choice))
                 if partial_choice:
-                    consequence = partial_choice.get('consequence', 'Mixed results.')
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}D{dec_num}Partial",
-                        content=f"""<div class="feedback-partial">{consequence}</div>""",
-                        choices=[Choice("Continue", next_decision)],
-                        position_y=y_pos
-                    ))
-                    y_pos += 80
+                    all_choices.append(('partial', partial_choice))
+                for i, pc in enumerate(poor_choices):
+                    all_choices.append((f'poor{i}', pc))
 
-                # Poor path (consolidated)
-                if poor_choices:
-                    consequence = poor_choices[0].get('consequence', 'This creates issues.')
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}D{dec_num}Poor",
-                        content=f"""<div class="feedback-incorrect">{consequence}</div>""",
-                        choices=[Choice("Continue", next_decision)],
-                        position_y=y_pos
-                    ))
-                    y_pos += 80
+                random.shuffle(all_choices)
 
-            else:
-                # Final decision - create outcome passages with points
-                resolution = chapter.get('resolution', '')
+                for quality_key, choice in all_choices:
+                    choice_text = choice.get('text', 'Take action')[:60]
 
-                # Best outcome
-                if best_choice:
-                    feedback = best_choice.get('feedback', 'Correct application of the concept.')
-                    consequence = best_choice.get('consequence', 'Success.')
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}Best",
-                        content=f"""<div class="feedback-correct">
+                    if is_final_decision:
+                        if quality_key == 'best':
+                            target = f"C{concept_num}Best"
+                        elif quality_key == 'partial':
+                            target = f"C{concept_num}Partial"
+                        else:
+                            target = f"C{concept_num}Poor{quality_key[-1] if quality_key[-1].isdigit() else '0'}"
+                    else:
+                        if quality_key == 'best':
+                            target = f"C{concept_num}D{dec_num}Best"
+                        elif quality_key == 'partial':
+                            target = f"C{concept_num}D{dec_num}Partial"
+                        else:
+                            target = f"C{concept_num}D{dec_num}Poor"
+
+                    passage_choices.append(Choice(choice_text, target))
+
+                # For backwards compatibility, use C{n}_root for first decision
+                passage_name = f"C{concept_num}_root" if dec_num == 1 else f"C{concept_num}D{dec_num}"
+
+                story.add_passage(Passage(
+                    name=passage_name,
+                    content=decision_content,
+                    choices=passage_choices,
+                    position_y=y_pos
+                ))
+                y_pos += 100
+
+                if not is_final_decision:
+                    next_decision = f"C{concept_num}D{dec_num + 1}"
+
+                    if best_choice:
+                        consequence = best_choice.get('consequence', 'Good outcome.')
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}D{dec_num}Best",
+                            content=f"""<div class="feedback-correct">{consequence}</div>""",
+                            choices=[Choice("Continue", next_decision)],
+                            position_y=y_pos
+                        ))
+                        y_pos += 80
+
+                    if partial_choice:
+                        consequence = partial_choice.get('consequence', 'Mixed results.')
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}D{dec_num}Partial",
+                            content=f"""<div class="feedback-partial">{consequence}</div>""",
+                            choices=[Choice("Continue", next_decision)],
+                            position_y=y_pos
+                        ))
+                        y_pos += 80
+
+                    if poor_choices:
+                        consequence = poor_choices[0].get('consequence', 'This creates issues.')
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}D{dec_num}Poor",
+                            content=f"""<div class="feedback-incorrect">{consequence}</div>""",
+                            choices=[Choice("Continue", next_decision)],
+                            position_y=y_pos
+                        ))
+                        y_pos += 80
+
+                else:
+                    resolution = chapter.get('resolution', '')
+
+                    if best_choice:
+                        feedback = best_choice.get('feedback', 'Correct application of the concept.')
+                        consequence = best_choice.get('consequence', 'Success.')
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}Best",
+                            content=f"""<div class="feedback-correct">
 <strong>Well done!</strong> <span class="points-earned">+{points} points</span>
 </div>
 
@@ -1417,21 +1715,20 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
 <div class="source-reference"><strong>Why this works:</strong> {feedback}</div>
 
 {resolution}""",
-                        choices=[Choice("Continue", next_chapter)],
-                        tags=["correct", f"concept-{concept_num}"],
-                        position_y=y_pos
-                    ))
-                    y_pos += 120
+                            choices=[Choice("Continue", next_chapter)],
+                            tags=["correct", f"concept-{concept_num}"],
+                            position_y=y_pos
+                        ))
+                        y_pos += 120
 
-                # Partial outcome
-                if partial_choice:
-                    partial_pts = points // 2
-                    feedback = partial_choice.get('feedback', 'Partially correct.')
-                    consequence = partial_choice.get('consequence', 'Mixed results.')
-                    better = best_choice.get('feedback', '') if best_choice else ''
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}Partial",
-                        content=f"""<div class="feedback-partial">
+                    if partial_choice:
+                        partial_pts = points // 2
+                        feedback = partial_choice.get('feedback', 'Partially correct.')
+                        consequence = partial_choice.get('consequence', 'Mixed results.')
+                        better = best_choice.get('feedback', '') if best_choice else ''
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}Partial",
+                            content=f"""<div class="feedback-partial">
 <strong>Partially correct.</strong> <span class="points-partial">+{partial_pts} points</span>
 </div>
 
@@ -1441,20 +1738,19 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
 {f'<div class="source-reference"><strong>Better approach:</strong> {better[:150]}</div>' if better else ''}
 
 {resolution}""",
-                        choices=[Choice("Continue", next_chapter)],
-                        tags=["partial", f"concept-{concept_num}"],
-                        position_y=y_pos
-                    ))
-                    y_pos += 120
+                            choices=[Choice("Continue", next_chapter)],
+                            tags=["partial", f"concept-{concept_num}"],
+                            position_y=y_pos
+                        ))
+                        y_pos += 120
 
-                # Poor outcomes
-                for i, poor in enumerate(poor_choices[:2]):
-                    feedback = poor.get('feedback', 'This approach has issues.')
-                    consequence = poor.get('consequence', 'Problems occurred.')
-                    better = best_choice.get('feedback', '') if best_choice else ''
-                    story.add_passage(Passage(
-                        name=f"C{concept_num}Poor{i}",
-                        content=f"""<div class="feedback-incorrect">
+                    for i, poor in enumerate(poor_choices[:2]):
+                        feedback = poor.get('feedback', 'This approach has issues.')
+                        consequence = poor.get('consequence', 'Problems occurred.')
+                        better = best_choice.get('feedback', '') if best_choice else ''
+                        story.add_passage(Passage(
+                            name=f"C{concept_num}Poor{i}",
+                            content=f"""<div class="feedback-incorrect">
 <strong>Not quite right.</strong> <span class="points-missed">0 points</span>
 </div>
 
@@ -1464,11 +1760,11 @@ def convert_ai_scenario_to_story(content: EducationalContent, scenario_data: dic
 {f'<div class="source-reference"><strong>Better approach:</strong> {better[:150]}</div>' if better else ''}
 
 {resolution}""",
-                        choices=[Choice("Continue", next_chapter)],
-                        tags=["incorrect", f"concept-{concept_num}"],
-                        position_y=y_pos
-                    ))
-                    y_pos += 120
+                            choices=[Choice("Continue", next_chapter)],
+                            tags=["incorrect", f"concept-{concept_num}"],
+                            position_y=y_pos
+                        ))
+                        y_pos += 120
 
     # Results passage
     conclusion = scenario_data.get('conclusion', {})
