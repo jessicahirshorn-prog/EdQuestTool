@@ -463,9 +463,6 @@ tw-link:hover {{
 .password-error.show {{
     display: block;
 }}
-.main-content.hidden {{
-    display: none;
-}}
 </style>
 </head>
 <body>
@@ -478,7 +475,6 @@ tw-link:hover {{
         <div class="password-error" id="passwordError">Incorrect password. Please try again.</div>
     </div>
 </div>
-<div class="main-content hidden" id="mainContent">
 <tw-storydata name="{html.escape(self.title)}" startnode="{start_node}" creator="EdQuest"
 creator-version="2.0.0" ifid="{self.ifid}" zoom="1" format="Harlowe" format-version="3.3.9"
 options="" tags="" hidden>
@@ -486,7 +482,6 @@ options="" tags="" hidden>
 <script role="script" id="twine-user-script" type="text/twine-javascript"></script>
 {passages_html}
 </tw-storydata>
-</div>
 <script>
 const SITE_PASSWORD = 'EdQuestBeta2026';
 
@@ -495,7 +490,6 @@ function checkPassword() {{
     const error = document.getElementById('passwordError');
     if (input.value === SITE_PASSWORD) {{
         document.getElementById('passwordOverlay').classList.add('hidden');
-        document.getElementById('mainContent').classList.remove('hidden');
         sessionStorage.setItem('edquest_scenario_auth', 'true');
     }} else {{
         error.classList.add('show');
@@ -506,7 +500,6 @@ function checkPassword() {{
 
 if (sessionStorage.getItem('edquest_scenario_auth') === 'true') {{
     document.getElementById('passwordOverlay').classList.add('hidden');
-    document.getElementById('mainContent').classList.remove('hidden');
 }}
 
 document.getElementById('passwordInput').addEventListener('keypress', function(e) {{
